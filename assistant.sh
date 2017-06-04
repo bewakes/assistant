@@ -95,8 +95,12 @@ execute_command() {
         "play")
             url=''
             execute_command youtube song_url "$2"
-            msg="Playing song '$2'"
-            execute_command vlc_play audio $url & #url will be updated in youtube command
+            if [[ -n $url ]];then
+                msg="Playing song '$2'"
+                execute_command vlc_play audio $url & #url will be updated in youtube command
+            else
+                msg="NO song found"
+            fi
             ;;
         "playlist")
             url=''

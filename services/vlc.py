@@ -9,7 +9,7 @@ class VLC(SocketMixin):
     """
     def __init__(self):
         self._player_pid = None
-        self._vlc_audio_command = "cvlc --vout none {url}"
+        self._vlc_audio_command = "cvlc --vout none {url} --preferred-resolution 144"
         pass
 
     def _play_audio(self, arg):
@@ -50,5 +50,8 @@ if __name__ == '__main__':
     # get port from arg
     port = sys.argv[1]
 
+    try:
     # run it
-    v.initialize_and_run(port)
+        v.initialize_and_run(port)
+    except:
+        print(traceback.format_exc())

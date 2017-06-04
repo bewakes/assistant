@@ -1,10 +1,11 @@
 import requests
+import traceback
 import urllib
 import os
 import sys
 from handler import SocketMixin
 
-YOUTUBE_URL = 'https://www.youtube.com/watch?v={videourl}&rel=0&vq={quality}'
+YOUTUBE_URL = 'https://www.youtube.com/watch?v={videourl}'
 
 class NoVideoFound(Exception):
     pass
@@ -38,7 +39,7 @@ class Youtube(SocketMixin):
                 first = x
                 break
         else:
-            raise NoVideoFound
+            return ""
         return YOUTUBE_URL.format(videourl=first['id']['videoId'], quality='tiny')
 
     def handle_command(self, command):
@@ -63,4 +64,7 @@ if __name__ == '__main__':
     port = sys.argv[1]
 
     # run it
-    y.initialize_and_run(port)
+    try:
+        y.initialize_and_run(port)
+    except:
+        print(traceback.format_exc())
