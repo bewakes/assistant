@@ -1,66 +1,132 @@
 #!/bin/sh
 
-#initial pid of player is nothing
-curr_player_pid=-1
+## TRAP AND CLEANUP
+cleanup() {
+    echo 'cleaning up'
+    for id in ${pids[@]}
+    do
+        kill $id
+    done
+    echo cleaned up
+    exit 0
+}
 
-prompt=">>> "
-msg="Welcome!!"
+# to kill all the spawned service processes upon receiving Ctrl-C
+trap 'cleanup' SIGINT
+## TRAP AND CLEANUP
+
+#############################
+ ## A SHORT INTRO TO THIS ##
+#############################
+################################################################################
+# This is the main file. This is what takes in the user commands. Each command 
+#  is associated with one of the services inside services/folder. During the 
+#  initialization, this will create processes for each of the services and later
+#  all the communication takes place with the use of sockets
+################################################################################
+
+############################
+ ## INITIALIZE VARIABLES ##
+############################
+prompt=">>> " # prompt for user
+msg="Hi there!!" # Initial message to be displayed by the assistant
 
 # hash table for commands -> services
-declare -A command_service_map=( ['play']='youtube')
 declare -A service_pid_map
 
-services=("youtube")
-# ports where the processes listen for command
-ports=
-pids=
+# list of available services
+declare -a services
+services=("youtube" "vlc")
 
-initialize_ports() {
-    local i=0
-    for s in $services
+# ports where the processes listen for command
+declare -A ports
+
+# process ids of the services spawned
+declare -A pids
+
+################################
+## END INITIALIZING VARIABLES ##
+################################
+
+
+assign_ports() {
+    ##########################################
+    ## Assign random ports to services.
+    ## Ports are stored by 'ports' variable
+    ##########################################
+    #local i=0
+    for s in ${services[@]}
     do
-        ports[$i]=$((RANDOM%2048+1025))
-        i=$(($i+1)) # increment
+        ports[$s]=$((RANDOM%2048+1025))
+        #i=$(($i+1)) # increment
     done
 }
 
 initialize() {
-    # first initialize ports
-    initialize_ports
+    ###########################################
+    ## This is the first function called. Here,
+    ## services scripts are run by instructing
+    ## them to listen on the ports assigned. 
+    ## Each pid is stored in 'pids' variable.
+    ###########################################
 
-    # run all the processes/services, like youtube/player
-    local i=0
-    for s in $services
+    # first assign ports
+    assign_ports
+
+    # run all the processes/services, and store each pid
+    #local i=0
+    for s in ${services[@]}
     do
         # make each service run and listen to the port specified
-        python services/$s.py ${ports[$i]} &
+        # NOTE: the first argument will be the assigned port number to listen
+        python services/$s.py ${ports[$s]} 2>/dev/null &
 
-        pids[$i]=$!
+        pids[$s]=$! # storing corresponding pid
 
         # add to map/hashtable
-        service_pid_map[$s]=${pids[$i]}
+        service_pid_map[$s]=${pids[$s]}
 
-        i=$(($i+1)) # increment
+        #i=$(($i+1)) # increment counter
     done
-    echo ${pids[0]}
 }
 
 execute_command() {
     case $1 in
         "play")
-            #kill $curr_player_pid
-            echo $2
-            python services/youtube.py $2 >/dev/null 2>/dev/null
-            curr_player_pid=$!
-            echo $curr_player_pid
-            #echo curr pid $curr_player_pid
-            msg="Playing.."
+            url=''
+            execute_command youtube song_url "$2"
+            msg="Playing song '$2'"
+            execute_command vlc_play audio $url & #url will be updated in youtube command
+            ;;
+        "playlist")
+            url=''
+            execute_command youtube playlist_url "$2"
+            msg="Playing Playlist.. '$2'"
             ;;
         "stop")
-            echo stop
-            echo curr pid $curr_player_pid ..
-            kill $curr_player_pid
             msg="Stopped"
+            ;;
+        "youtube")
+            ## get url of the song from youtube service
+
+            ## first get processid and port number for service(youtube)
+            exec 3<>/dev/tcp/localhost/${ports["youtube"]}
+
+            ## send to socket
+            echo ${@:2} >&3
+
+            ## read data from the socket
+            read -r url <&3
+            ;;
+        "vlc_play")
+            exec 3<>/dev/tcp/localhost/${ports["vlc"]}
+
+            ## send to socket
+            echo ${@:2} >&3
+
+            ## read data from the socket
+            read -r tmp <&3
+            msg="Playing"
             ;;
         *)
             msg="Command not recognized"
@@ -68,7 +134,7 @@ execute_command() {
     esac
 }
 
-#initialize
+initialize
 
 while true; do
     echo $prompt$msg

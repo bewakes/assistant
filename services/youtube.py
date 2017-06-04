@@ -2,16 +2,17 @@ import requests
 import urllib
 import os
 import sys
-import subprocess
+from handler import SocketMixin
 
-import socket
-
-YOUTUBE_URL = 'https://www.youtube.com/watch?v={videourl}'
+YOUTUBE_URL = 'https://www.youtube.com/watch?v={videourl}&vq={quality}'
 
 class NoVideoFound(Exception):
     pass
 
-class Youtube():
+class Youtube(SocketMixin):
+    """
+    Service to query songs and get youtube urls from youtube api
+    """
     def __init__(self):
         self._key = os.environ['API_KEY']
         self._url = 'https://www.googleapis.com/youtube/v3/search?{urlparams}'
@@ -19,7 +20,6 @@ class Youtube():
             'key':self._key,
             'part':'snippet',
         }
-        self._vlc_command = "cvlc --vout none {url}"
 
         self._current_song_url = ""
         self._vlc_pid = None
@@ -39,33 +39,28 @@ class Youtube():
                 break
         else:
             raise NoVideoFound
-        return YOUTUBE_URL.format(videourl=first['id']['videoId'])
+        return YOUTUBE_URL.format(videourl=first['id']['videoId'], quality='tiny')
 
-    def _play_with_vlc(self, video_url):
-        command = self._vlc_command.format(url=video_url)
-        process = subprocess.Popen(command.split())#, stdout=IPE)
-        self._vlc_pid = process.pid
-        output, error = process.communicate()
+    def handle_command(self, command):
+        """
+        This has been overridden from the mixin
+        """
+        cmd_args = command.decode('ascii').split()
+        cmd = cmd_args[0]
+        args = ' '.join(cmd_args[1:])
 
-    def play_song(self, songname):
-        print("SONG", songname)
-        url = self.search_and_get_first_videourl(songname)
-        self._play_with_vlc(url)
+        # TODO: make the following cleaner, can have multiple commands
+        if cmd == 'song_url':
+            return self.search_and_get_first_videourl(args)
+        elif cmd == 'playlist_url':
+            # TODO: complete this
+            return ''
 
 if __name__ == '__main__':
     y = Youtube()
-    y.play_song(' '.join(sys.argv[1:]))
-    port = int(sys.argv[1])
-    assert False
 
-    s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-    s.bind(('', port))
-    s.listen(5) # number of unaccepted connections allowed before none accpted is 5
-    conn, addr = s.accept()
+    # get port from arg
+    port = sys.argv[1]
 
-    with conn:
-        while True:
-            songname = conn.recv(1024)
-            print(songname)
-            conn.send(y.search_and_get_first_videourl(songname).encode())
-
+    # run it
+    y.initialize_and_run(port)
