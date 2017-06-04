@@ -2,7 +2,7 @@
 I am very lazy. So, I'm going to make my assistant do things for me. 
 
 ## Requirements so far
-- bash 4
+- bash 4 (which must be already the one in newer linux versions)
 - python3
 - vlc
 - A GOOGLE API KEY (which is used to search for songs)
