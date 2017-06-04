@@ -4,7 +4,7 @@ import os
 import sys
 from handler import SocketMixin
 
-YOUTUBE_URL = 'https://www.youtube.com/watch?v={videourl}&vq={quality}'
+YOUTUBE_URL = 'https://www.youtube.com/watch?v={videourl}&rel=0&vq={quality}'
 
 class NoVideoFound(Exception):
     pass
