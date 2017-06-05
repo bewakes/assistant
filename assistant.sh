@@ -1,5 +1,4 @@
-#!/bin/sh
-PROJECT_DIR=/home/bibek/projects/assistant/
+#!/bin/bash
 
 ## TRAP AND CLEANUP
 cleanup() {
@@ -80,7 +79,7 @@ initialize() {
     do
         # make each service run and listen to the port specified
         # NOTE: the first argument will be the assigned port number to listen
-        python "$PROJECT_DIR"services/$s.py ${ports[$s]} 2>/dev/null &
+        python3 "$ASSISTANT_DIR"services/$s.py ${ports[$s]} 2>/dev/null &
 
         pids[$s]=$! # storing corresponding pid
 
