@@ -133,6 +133,10 @@ execute_command() {
             read -r tmp <&3
             msg="Playing"
             ;;
+        "bye")
+            cleanup
+            exit 0
+            ;;
         *)
             msg="Command not recognized"
             ;;
