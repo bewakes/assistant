@@ -6,6 +6,7 @@ I am very lazy. So, I'm going to make my assistant do things for me.
 - python3
 - vlc
 - A GOOGLE API KEY (which is used to search for songs)
+- netcat (to communicate with vlc, like play/pause/next etc)
 
 ## A sample command and result 
 ```
