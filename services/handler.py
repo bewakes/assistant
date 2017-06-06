@@ -1,11 +1,46 @@
 import socket
+import subprocess
 
 class SocketMixin(object):
     """
     Mixin to provide command handling interface to services
     """
     def __init__(self):
-        pass
+        self._child_pids={}
+
+    def execute_command(self, command, bg=True):
+        """
+        Execute command and return pid
+        """
+        if type(command) == str:
+            command = command.split()
+        # other wise, it is list(assumption)
+        process = subprocess.Popen(command)
+
+        if not bg:
+            output, error = process.communicate()
+
+        return process.pid
+
+    def kill_child(self, pid):
+        """
+        Kill child with given pid
+        """
+        try:
+            self.execute_command("kill "+str(pid))
+        except Exception as e:
+            print(e)
+
+    def killall(self):
+        """
+        Kill all child
+        """
+        try:
+            # TODO: check status of _child_pids keys also
+            self.execute_command("kill "+' '.join([str(x) for x in self._child_pids.keys()]))
+        except Exception as e:
+            print(e)
+
 
     def handle_command(self, command):
         """
@@ -30,5 +65,11 @@ class SocketMixin(object):
         while True:
             conn, addr = self.sock.accept()
             command = conn.recv(1024)
-            result = self.handle_command(command)
+
+            if command.split()[0] == 'killall':
+                self.killall()
+                result = "Murdered all of 'em"
+            else:
+                result = self.handle_command(command)
+
             conn.send('{}\n'.format(result).encode('ascii'))

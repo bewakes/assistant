@@ -3,6 +3,19 @@
 ## TRAP AND CLEANUP
 cleanup() {
     echo 'cleaning up'
+    # first instruct all the services to kill any childs spawned
+    # NOTE: though services may spawn child independently in background,
+    # they need to keep track of their pids in order for better cleanup
+    for s in ${services[@]}
+    do
+        exec 3<>/dev/tcp/localhost/${ports[$s]}
+        ## send message to socket to kill all children processes
+        echo killall >&3
+        ## read data from the socket
+        read -r tmp <&3
+    done
+
+    # now kill each services
     for id in ${pids[@]}
     do
         kill $id
@@ -57,7 +70,7 @@ assign_ports() {
     #local i=0
     for s in ${services[@]}
     do
-        ports[$s]=$((RANDOM%2048+1025))
+        ports[$s]=$((RANDOM%2048+4213)) # 4213 because vlc uses 4212. TODO: retry if already used port
         #i=$(($i+1)) # increment
     done
 }
@@ -92,14 +105,21 @@ initialize() {
 
 execute_command() {
     case $1 in
+        "pause")
+            echo -e "test\npause\nquit" | nc localhost 4212
+            ;;
         "play")
-            url=''
-            execute_command youtube song_url "$2"
-            if [[ -n $url ]];then
-                msg="Playing song '$2'"
-                execute_command vlc_play audio $url & #url will be updated in youtube command
+            if [[ -z $2 ]];then
+                echo -e "test\npause\nquit" | nc localhost 4212
             else
-                msg="NO song found"
+                url=''
+                execute_command youtube song_url "$2"
+                if [[ -n $url ]];then
+                    msg="Playing song '$2'"
+                    execute_command vlc_play audio $url & #url will be updated in youtube command
+                else
+                    msg="NO song found"
+                fi
             fi
             ;;
         "playlist")

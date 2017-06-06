@@ -8,9 +8,9 @@ class VLC(SocketMixin):
     Service to play songs/urls from commandline
     """
     def __init__(self):
+        super().__init__()
         self._player_pid = None
-        self._vlc_audio_command = "cvlc --vout none {url} --preferred-resolution 144"
-        pass
+        self._vlc_audio_command = "cvlc -I telnet --telnet-password test --vout none {url} --preferred-resolution 144"
 
     def _play_audio(self, arg):
         """
@@ -19,6 +19,9 @@ class VLC(SocketMixin):
         audi_commd = self._vlc_audio_command.format(url=arg)
         process = subprocess.Popen(audi_commd.split())
         self._player_pid = process.pid
+
+        # add pid to child_pids
+        self._child_pids[process.pid] = True
         #output, error = process.communicate()
 
 
@@ -33,9 +36,8 @@ class VLC(SocketMixin):
 
             if cmd == 'audio':
                 if self._player_pid:
-                    # kill the player and run new
-                    killer = subprocess.Popen(["kill", str(self._player_pid)])
-                    killer.communicate()
+                    self.kill_child(self._player_pid)
+                    del self._child_pids[self._player_pid]
                     self._player_pid = None
 
                 self._play_audio(args)
