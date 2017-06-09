@@ -1,5 +1,7 @@
 #!/bin/bash
 
+source "$ASSISTANT_DIR"helpers.sh
+
 ## TRAP AND CLEANUP
 cleanup() {
     echo 'cleaning up'
@@ -83,6 +85,13 @@ initialize() {
     ## Each pid is stored in 'pids' variable.
     ###########################################
 
+    # to store data
+    mkdir -p $HOME/.assistant/
+    if [[ ! -f $HOME/.assistant/songs ]]; then
+        echo file not found
+        touch $HOME/.assistant/songs
+    fi
+
     # first assign ports
     assign_ports
 
@@ -111,10 +120,20 @@ execute_command() {
         "play")
             if [[ -z $2 ]];then
                 echo -e "test\npause\nquit" | nc localhost 4212
+            elif [[ "$2" == "random" ]]; then
+
+                # first read list from file
+                readarray songs_list < $HOME/.assistant/songs
+                # call get random function, value stored in $rand_song variable
+                getrandom
+                # and command vlc to play the audio
+                execute_command vlc_play audio $rand_song
             else
                 url=''
                 execute_command youtube song_url "$2"
                 if [[ -n $url ]];then
+                    # add the song to songs files, later used for random playing
+                    echo $url $2 >> $HOME/.assistant/songs
                     msg="Playing song '$2'"
                     execute_command vlc_play audio $url & #url will be updated in youtube command
                 else
