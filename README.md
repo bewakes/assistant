@@ -29,8 +29,14 @@ I am very lazy. So, I'm going to make my assistant do things for me.
 This plays the song 'Jati maya laye pani' in background. 
 
 ## TODO: automatic installation and setup
-For now, just need to add 
+For now, just need to add  
+
 `export API_KEY="<Your API key>"` and  
+
 `export ASSISTANT_DIR="<this project's directory>" ` in `bashrc`.  
 
-More awesome features on the way.
+More awesome features on the way.  
+
+## CONTRIBUTIONS 
+contributions are highly welcome, We'll make a 'jarvis' like being. ;).  
+Go through [Implementation.md](https://github.com/bewakes/assistant/blob/master/Implementation.md)
