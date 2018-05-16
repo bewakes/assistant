@@ -135,7 +135,7 @@ execute_command() {
                     # add the song to songs files, later used for random playing
                     echo $url $2 >> $HOME/.assistant/songs
                     msg="Playing song '$2'"
-                    execute_command vlc_play audio $url & #url will be updated in youtube command
+                    execute_command vlc_play audio $url >> ~/.assistant_log #url will be updated in youtube command
                 else
                     msg="NO song found"
                 fi

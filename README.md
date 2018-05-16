@@ -7,7 +7,7 @@ I am very lazy. So, I'm going to make my assistant do things for me.
 - vlc(this will use commandline version)
 - A GOOGLE API KEY (which is used to search for songs)
 - telnet and netcat (to communicate with vlc, like play/pause/next etc)  
-- Intenet(because songs are streamed from youtube)
+- Internet(because songs are streamed from youtube)
 
 ## current features 
 - play <song_name> : plays the song from youtube

@@ -10,7 +10,7 @@ class VLC(SocketMixin):
     def __init__(self):
         super().__init__()
         self._player_pid = None
-        self._vlc_audio_command = "cvlc -I telnet --telnet-password test --vout none {url} --preferred-resolution 144"
+        self._vlc_audio_command = "cvlc -I telnet --telnet-password test --no-video {url} --preferred-resolution 144"  # noqa
 
     def _play_audio(self, arg):
         """
@@ -24,11 +24,11 @@ class VLC(SocketMixin):
         self._child_pids[process.pid] = True
         #output, error = process.communicate()
 
-
     def handle_command(self, command):
         """
         This has been overridden from mixin
         """
+        print("handle command")
         try:
             cmd_args = command.decode('ascii').split()
             cmd = cmd_args[0]
@@ -41,10 +41,13 @@ class VLC(SocketMixin):
                     self._player_pid = None
 
                 self._play_audio(args)
+            elif cmd == 'killall':
+                self.killall()
         except Exception as e:
             print(traceback.format_exc())
 
         return "Playing"
+
 
 if __name__ == '__main__':
     v = VLC()

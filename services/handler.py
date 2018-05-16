@@ -1,12 +1,13 @@
 import socket
 import subprocess
 
+
 class SocketMixin(object):
     """
     Mixin to provide command handling interface to services
     """
     def __init__(self):
-        self._child_pids={}
+        self._child_pids = {}
 
     def execute_command(self, command, bg=True):
         """
@@ -27,7 +28,7 @@ class SocketMixin(object):
         Kill child with given pid
         """
         try:
-            self.execute_command("kill "+str(pid))
+            self.execute_command("kill -9 "+str(pid))
         except Exception as e:
             print(e)
 
@@ -37,10 +38,9 @@ class SocketMixin(object):
         """
         try:
             # TODO: check status of _child_pids keys also
-            self.execute_command("kill "+' '.join([str(x) for x in self._child_pids.keys()]))
+            self.execute_command("kill -9 "+' '.join([str(x) for x in self._child_pids.keys()]))
         except Exception as e:
             print(e)
-
 
     def handle_command(self, command):
         """
