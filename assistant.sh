@@ -5,19 +5,8 @@ source "$ASSISTANT_DIR"helpers.sh
 ## TRAP AND CLEANUP
 cleanup() {
     echo 'cleaning up'
-    # first instruct all the services to kill any childs spawned
-    # NOTE: though services may spawn child independently in background,
-    # they need to keep track of their pids in order for better cleanup
-    for s in ${services[@]}
-    do
-        exec 3<>/dev/tcp/localhost/${ports[$s]}
-        ## send message to socket to kill all children processes
-        echo killall >&3
-        ## read data from the socket
-        read -r tmp <&3
-    done
-
-    # now kill each services
+    # Now kill each services, which keep track of children themselves
+    # each will kill itself and its children with SIGTERM signal
     for id in ${pids[@]}
     do
         kill $id
@@ -69,11 +58,9 @@ assign_ports() {
     ## Assign random ports to services.
     ## Ports are stored by 'ports' variable
     ##########################################
-    #local i=0
     for s in ${services[@]}
     do
         ports[$s]=$((RANDOM%2048+4213)) # 4213 because vlc uses 4212. TODO: retry if already used port
-        #i=$(($i+1)) # increment
     done
 }
 
@@ -96,7 +83,6 @@ initialize() {
     assign_ports
 
     # run all the processes/services, and store each pid
-    #local i=0
     for s in ${services[@]}
     do
         # make each service run and listen to the port specified
@@ -107,8 +93,6 @@ initialize() {
 
         # add to map/hashtable
         service_pid_map[$s]=${pids[$s]}
-
-        #i=$(($i+1)) # increment counter
     done
 }
 

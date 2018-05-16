@@ -1,3 +1,5 @@
+import sys
+import signal
 import socket
 import subprocess
 
@@ -8,6 +10,12 @@ class SocketMixin(object):
     """
     def __init__(self):
         self._child_pids = {}
+
+        def handle_sigterm(num, frame):
+            self.killall()
+            sys.exit()
+
+        signal.signal(signal.SIGTERM, handle_sigterm)
 
     def execute_command(self, command, bg=True):
         """

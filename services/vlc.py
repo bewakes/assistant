@@ -3,6 +3,7 @@ import sys
 from handler import SocketMixin
 import traceback
 
+
 class VLC(SocketMixin):
     """
     Service to play songs/urls from commandline
@@ -22,13 +23,12 @@ class VLC(SocketMixin):
 
         # add pid to child_pids
         self._child_pids[process.pid] = True
-        #output, error = process.communicate()
+        # output, error = process.communicate()
 
     def handle_command(self, command):
         """
         This has been overridden from mixin
         """
-        print("handle command")
         try:
             cmd_args = command.decode('ascii').split()
             cmd = cmd_args[0]
@@ -56,7 +56,9 @@ if __name__ == '__main__':
     port = sys.argv[1]
 
     try:
-    # run it
+        # run it
         v.initialize_and_run(port)
-    except:
+    except SystemExit:
+        pass
+    except Exception:
         print(traceback.format_exc())
