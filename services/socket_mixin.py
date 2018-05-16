@@ -4,7 +4,7 @@ import socket
 import subprocess
 
 
-class SocketMixin(object):
+class SocketHandlerMixin(object):
     """
     Mixin to provide command handling interface to services
     """
