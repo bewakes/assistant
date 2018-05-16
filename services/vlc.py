@@ -1,10 +1,14 @@
 import subprocess
 import sys
-from handler import SocketMixin
+from socket_mixin import SocketHandlerMixin
 import traceback
 
+import log
 
-class VLC(SocketMixin):
+logger = log.get_logger('VLC Service')
+
+
+class VLC(SocketHandlerMixin):
     """
     Service to play songs/urls from commandline
     """
@@ -18,6 +22,7 @@ class VLC(SocketMixin):
         play audio with vlc
         """
         audi_commd = self._vlc_audio_command.format(url=arg)
+        logger.info('VLC command: {}'.format(audi_commd))
         process = subprocess.Popen(audi_commd.split())
         self._player_pid = process.pid
 

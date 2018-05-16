@@ -3,14 +3,20 @@ import traceback
 import urllib
 import os
 import sys
-from handler import SocketMixin
+from socket_mixin import SocketHandlerMixin
+
+import log
+
+logger = log.get_logger('Youtube Search')
 
 YOUTUBE_URL = 'https://www.youtube.com/watch?v={videourl}'
+
 
 class NoVideoFound(Exception):
     pass
 
-class Youtube(SocketMixin):
+
+class Youtube(SocketHandlerMixin):
     """
     Service to query songs and get youtube urls from youtube api
     """
@@ -18,8 +24,8 @@ class Youtube(SocketMixin):
         self._key = os.environ['API_KEY']
         self._url = 'https://www.googleapis.com/youtube/v3/search?{urlparams}'
         self._base_params = {
-            'key':self._key,
-            'part':'snippet',
+            'key': self._key,
+            'part': 'snippet',
         }
 
         self._current_song_url = ""
@@ -39,8 +45,13 @@ class Youtube(SocketMixin):
                 first = x
                 break
         else:
+            logger.warn("Could not get Youtube search result for '{}'".format(
+                queryparam))
             return ""
-        return YOUTUBE_URL.format(videourl=first['id']['videoId'], quality='tiny')
+        return YOUTUBE_URL.format(
+            videourl=first['id']['videoId'],
+            quality='tiny'
+        )
 
     def handle_command(self, command):
         """

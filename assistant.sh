@@ -159,6 +159,11 @@ execute_command() {
             cleanup
             exit 0
             ;;
+        "list")
+            echo "LIST OF SONGS"
+            cat $HOME/.assistant/songs
+            echo $songs
+            ;;
         *)
             msg="Command not recognized"
             ;;
