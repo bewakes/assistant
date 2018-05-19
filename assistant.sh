@@ -1,5 +1,4 @@
 #!/bin/bash
-
 source "$ASSISTANT_DIR"helpers.sh
 
 ## TRAP AND CLEANUP

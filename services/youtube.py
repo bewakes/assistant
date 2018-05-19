@@ -3,11 +3,11 @@ import traceback
 import urllib
 import os
 import sys
-from socket_mixin import SocketHandlerMixin
+from socket_mixin_ import SocketHandlerMixin
 
-import log
+import log_
 
-logger = log.get_logger('Youtube Search')
+logger = log_.get_logger('Youtube Search')
 
 YOUTUBE_URL = 'https://www.youtube.com/watch?v={videourl}'
 

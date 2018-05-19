@@ -36,7 +36,7 @@ else
     check_installed youtube-dl
 
     echo "Setting up Env Variable ASSISTANT_DIR..."
-    echo "ASSISTANT_DIR=`pwd`" >> ~/.bashrc
+    echo "export ASSISTANT_DIR=`pwd`/" >> ~/.bashrc
     echo
 
     echo "CONGRATULATIONS!! Your Assistant is now ready. And you are more lazier. ;)"
