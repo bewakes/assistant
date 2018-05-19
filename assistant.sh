@@ -38,8 +38,9 @@ msg="Hi there!!" # Initial message to be displayed by the assistant
 declare -A service_pid_map
 
 # list of available services
+# looks into services dir. ommits modules starting with _
 declare -a services
-services=("youtube" "vlc")
+services=$(ls "$ASSISTANT_DIR"services | grep -v "^_" | sed 's/.py//')
 
 # ports where the processes listen for command
 declare -A ports
@@ -74,7 +75,7 @@ initialize() {
     # to store data
     mkdir -p $HOME/.assistant/
     if [[ ! -f $HOME/.assistant/songs ]]; then
-        echo file not found
+        echo songs file not found
         touch $HOME/.assistant/songs
     fi
 
