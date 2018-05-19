@@ -1,11 +1,11 @@
 import subprocess
 import sys
-from socket_mixin_ import SocketHandlerMixin
+from _socket_mixin import SocketHandlerMixin
 import traceback
 
-import log_
+import _log
 
-logger = log_.get_logger('VLC Service')
+logger = _log.get_logger('VLC Service')
 
 
 class VLC(SocketHandlerMixin):
