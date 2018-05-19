@@ -99,7 +99,8 @@ initialize() {
 execute_command() {
     case $1 in
         "pause")
-            echo -e "test\npause\nquit" | nc localhost 4212
+            execute_command vlc pause
+            #echo -e "test\npause\nquit" | nc localhost 4212
             ;;
         "play")
             if [[ -z $2 ]];then
@@ -111,15 +112,15 @@ execute_command() {
                 # call get random function, value stored in $rand_song variable
                 getrandom
                 # and command vlc to play the audio
-                execute_command vlc_play audio $rand_song
+                execute_command vlc play audio $rand_song
             else
                 url=''
-                execute_command youtube song_url "$2"
+                execute_command youtube song "$2"
                 if [[ -n $url ]];then
                     # add the song to songs files, later used for random playing
                     echo $url $2 >> $HOME/.assistant/songs
                     msg="Playing song '$2'"
-                    execute_command vlc_play audio $url >> ~/.assistant_log #url will be updated in youtube command
+                    execute_command vlc play audio $url >> ~/.assistant_log #url will be updated in youtube command
                 else
                     msg="NO song found"
                 fi
@@ -139,17 +140,20 @@ execute_command() {
             ## first get processid and port number for service(youtube)
             exec 3<>/dev/tcp/localhost/${ports["youtube"]}
 
+            echo $@
+            shift
             ## send to socket
-            echo ${@:2} >&3
+            echo $@ >&3
 
             ## read data from the socket
             read -r url <&3
             ;;
-        "vlc_play")
+        "vlc")
             exec 3<>/dev/tcp/localhost/${ports["vlc"]}
 
             ## send to socket
-            echo ${@:2} >&3
+            shift
+            echo $@ >&3
 
             ## read data from the socket
             read -r tmp <&3

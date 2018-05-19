@@ -3,6 +3,10 @@ import signal
 import socket
 import subprocess
 
+from . import log
+
+logger = log.get_logger('MIXIN')
+
 
 class SocketHandlerMixin(object):
     """
@@ -50,7 +54,10 @@ class SocketHandlerMixin(object):
         except Exception as e:
             print(e)
 
-    def handle_command(self, command):
+    def handle_killall(self):
+        self.killall()
+
+    def handler(self, command, args=[]):
         """
         To be overridden by inheriting class
         - command consists of the socket data sent by assistant(parent) process
@@ -59,7 +66,11 @@ class SocketHandlerMixin(object):
         ###
         # command parsing and handling logic to be implemented by child
         ###
-        return ""
+        methodname = 'handle_{}'.format(command)
+        logger.info('method name: {}'.format(methodname))
+        logger.info('args: {}'.format(args))
+        method = self.__getattribute__(methodname)
+        return method(args)
 
     def initialize_and_run(self, port, host=''):
         """
@@ -68,16 +79,16 @@ class SocketHandlerMixin(object):
         port = int(port)
         self.sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self.sock.bind((host, port))
-        self.sock.listen(5) # TODO: make this configurable
+        self.sock.listen(5)  # TODO: make this configurable
 
         while True:
             conn, addr = self.sock.accept()
-            command = conn.recv(1024)
+            raw_command = conn.recv(1024)
+            splitted = raw_command.split()
+            command, args = splitted[0], splitted[1:]
+            command = command.decode()
+            args = list(map(lambda x: x.decode(), args))
 
-            if command.split()[0] == 'killall':
-                self.killall()
-                result = "Murdered all of 'em"
-            else:
-                result = self.handle_command(command)
+            result = self.handler(command, args)
 
             conn.send('{}\n'.format(result).encode('ascii'))

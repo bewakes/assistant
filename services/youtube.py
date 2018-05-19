@@ -3,11 +3,13 @@ import traceback
 import urllib
 import os
 import sys
-from _socket_mixin import SocketHandlerMixin
 
-import _log
+sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-logger = _log.get_logger('Youtube Search')
+from utils.socket_mixin import SocketHandlerMixin  # noqa
+from utils import log  # noqa
+
+logger = log.get_logger('Youtube Search')
 
 YOUTUBE_URL = 'https://www.youtube.com/watch?v={videourl}'
 
@@ -53,6 +55,13 @@ class Youtube(SocketHandlerMixin):
             quality='tiny'
         )
 
+    def handle_song(self, args):
+        return self.search_and_get_first_videourl(args[0])
+
+    def handle_playlist(self, args):
+        # TODO: implement
+        return ""
+
     def handle_command(self, command):
         """
         This has been overridden from the mixin
@@ -67,6 +76,7 @@ class Youtube(SocketHandlerMixin):
         elif cmd == 'playlist_url':
             # TODO: complete this
             return ''
+
 
 if __name__ == '__main__':
     y = Youtube()
