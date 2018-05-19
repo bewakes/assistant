@@ -104,9 +104,9 @@ execute_command() {
             ;;
         "play")
             if [[ -z $2 ]];then
-                echo -e "test\npause\nquit" | nc localhost 4212
+                execute_command vlc play
+                # echo -e "test\npause\nquit" | nc localhost 4212
             elif [[ "$2" == "random" ]]; then
-
                 # first read list from file
                 readarray songs_list < $HOME/.assistant/songs
                 # call get random function, value stored in $rand_song variable
@@ -140,7 +140,6 @@ execute_command() {
             ## first get processid and port number for service(youtube)
             exec 3<>/dev/tcp/localhost/${ports["youtube"]}
 
-            echo $@
             shift
             ## send to socket
             echo $@ >&3

@@ -4,6 +4,7 @@ import socket
 import subprocess
 
 from . import log
+from .helpers import try_encode
 
 logger = log.get_logger('MIXIN')
 
@@ -91,4 +92,5 @@ class SocketHandlerMixin(object):
 
             result = self.handler(command, args)
 
-            conn.send('{}\n'.format(result).encode('ascii'))
+            out = '{}\n'.format(result)
+            conn.send(try_encode(out))

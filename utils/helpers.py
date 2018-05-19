@@ -22,5 +22,25 @@ def pipe_commands(commands):
             commands[-1], stdin=curr_process.stdout, stdout=subprocess.PIPE
         )
         process.wait()
-        output = p.stdout.read().decode()
-        return output
+        o = p.stdout.read()
+        return try_decode(o)
+
+
+def try_decode(b):
+    encodings = ['ascii', 'utf-8', 'latin']
+    for e in encodings:
+        try:
+            return b.decode(e)
+        except Exception:
+            pass
+    raise Exception('could not decode')
+
+
+def try_encode(b):
+    encodings = ['ascii', 'utf-8', 'latin']
+    for e in encodings:
+        try:
+            return b.encode(e)
+        except Exception:
+            pass
+    raise Exception('could not encode')

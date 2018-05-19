@@ -7,7 +7,7 @@ sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from utils.socket_mixin import SocketHandlerMixin  # noqa
 from utils import log  # noqa
-from utils.helpers import pipe_commands  #noqa
+from utils.helpers import pipe_commands  # noqa
 
 
 logger = log.get_logger('VLC Service')
@@ -21,7 +21,7 @@ class VLC(SocketHandlerMixin):
         super().__init__()
         self._player_pid = None
         self._vlc_audio_command = "cvlc -I telnet --telnet-password test --no-video {url} --preferred-resolution 144"  # noqa
-        self.pause_command = 'echo -e "test\npause\nquit" '
+        self.pause_command = 'echo -e test\npause\nquit\n'
         self.netcat_command = 'nc localhost 4212'
         self.playing = False
 
@@ -29,7 +29,7 @@ class VLC(SocketHandlerMixin):
         """
         play audio with vlc
         """
-        url = args[0]
+        url = args[0].replace('https', 'http')
         audi_commd = self._vlc_audio_command.format(url=url)
         logger.info('VLC command: {}'.format(audi_commd))
         process = subprocess.Popen(audi_commd.split())
@@ -41,16 +41,18 @@ class VLC(SocketHandlerMixin):
 
     def handle_pause(self, args):
         op = pipe_commands(
-            [x.split() for x in (self.pause_command, self.netcat_command)]
+            [x.split(' ') for x in (self.pause_command, self.netcat_command)]
         )
+        self.playing = False
         return op
 
     def handle_resume(self, args):
         op = ""
+        logger.info('handle resume')
         if not self.playing:
             # same command as pause
             op = pipe_commands(
-                [x.split() for x in (self.pause_command, self.netcat_command)]
+                [x.split(' ') for x in (self.pause_command, self.netcat_command)]
             )
         return op
 
@@ -60,12 +62,18 @@ class VLC(SocketHandlerMixin):
             output = self.handle_resume(args)
             return output
         if args[0] == 'audio':
+            self.handle_killall()
             self._play_audio(args[1:])
             self.playing = True
         elif args[0] == 'video':
+            self.handle_killall()
             self._play_video(args[1:])
+            self.playing = True
         else:
             raise Exception("invalid argument")
+
+    def handle_playlist(self, args):
+        pass
 
 
 if __name__ == '__main__':
