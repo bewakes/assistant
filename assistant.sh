@@ -167,6 +167,11 @@ execute_command() {
             cat $HOME/.assistant/songs
             echo $songs
             ;;
+        "meaning")
+            exec 3<>/dev/tcp/localhost/${ports["meaning"]}
+            echo $@ >&3
+            msg=$(cat<&3)
+            ;;
         *)
             msg="Command not recognized"
             ;;
@@ -176,7 +181,7 @@ execute_command() {
 initialize
 
 while true; do
-    echo $prompt$msg
+    echo -e $prompt"$msg"
     echo -n ">> "
     read -a command_args
     cmnd=${command_args[0]}

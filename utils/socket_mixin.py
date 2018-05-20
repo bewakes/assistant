@@ -80,9 +80,8 @@ class SocketHandlerMixin(object):
         port = int(port)
         self.sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self.sock.bind((host, port))
-        self.sock.listen(5)  # TODO: make this configurable
-
         while True:
+            self.sock.listen(5)  # TODO: make this configurable
             conn, addr = self.sock.accept()
             raw_command = conn.recv(1024)
             splitted = raw_command.split()
@@ -94,3 +93,4 @@ class SocketHandlerMixin(object):
 
             out = '{}\n'.format(result)
             conn.send(try_encode(out))
+            conn.close()
