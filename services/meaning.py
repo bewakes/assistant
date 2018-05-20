@@ -1,5 +1,6 @@
 import sys
 import os
+import json
 import requests
 import traceback
 
@@ -47,9 +48,36 @@ class Meaning(SocketHandlerMixin):
         self.app_id = os.environ.get('OXFORD_APP_ID', '')
         self.app_key = os.environ.get('OXFORD_APP_KEY', '')
         self.query = None
+        self.FILENAME = 'meanings.json'
+        self.meanings = self.read_meanings()
+
+    def _get_path(self):
+        dirname = os.path.expanduser('~/.assistant')
+        path = os.path.join(dirname, self.FILENAME)
+        return path
+
+    def read_meanings(self):
+        path = self._get_path()
+        try:
+            with open(path) as f:
+                return json.loads(f.read())
+        except FileNotFoundError:
+            return {}
+
+    def update_meanings(self, data):
+        meanings = self.read_meanings()
+        meanings[self.query.lower()] = data
+        path = self._get_path()
+        with open(path, 'w') as f:
+            f.write(json.dumps(meanings))
+        self.meanings = meanings
 
     def handle_meaning(self, args):
         self.query = args[0]
+        if self.meanings.get(self.query.lower()):
+            logger.info("returning from local file")
+            return self.display_meaning_data(self.meanings[self.query.lower()])
+
         language = 'en'
         url = self.url.format(
             language, self.query.lower()
@@ -75,6 +103,8 @@ class Meaning(SocketHandlerMixin):
                         'examples': examples
                     }
                     data[category] = data.get(category, []) + [info]
+        # update meanings
+        self.update_meanings(data)
         return self.display_meaning_data(data)
 
     def display_meaning_data(self, data):
@@ -86,7 +116,6 @@ class Meaning(SocketHandlerMixin):
             s += "  " + v[0]['meaning'] + "\n"
             for e in v[0]['examples']:
                 s += TerminalFormatter.yellow('  "{}"'.format(e))+"\n"
-        logger.info("Meaning data:" + s)
         return s
 
 
