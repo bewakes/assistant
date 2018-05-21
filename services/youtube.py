@@ -56,7 +56,8 @@ class Youtube(SocketHandlerMixin):
         )
 
     def handle_song(self, args):
-        return self.search_and_get_first_videourl(args[0])
+        query = ' '.join(args)
+        return self.search_and_get_first_videourl(query)
 
     def handle_playlist(self, args):
         # TODO: implement

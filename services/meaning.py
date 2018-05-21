@@ -91,15 +91,23 @@ class Meaning(SocketHandlerMixin):
         if r.status_code < 200 or r.status_code > 299:
             return self.display_meaning_data({})
         raw_data = r.json()
+        logger.info(raw_data)
         for result in raw_data['results']:
             for lex_entry in result['lexicalEntries']:
                 category = lex_entry['lexicalCategory']
                 for entry in lex_entry['entries']:
+                    meanings = []
                     sense = entry['senses'][0]
-                    meaning = sense['definitions'][0]
-                    examples = [x['text'] for x in sense.get('examples', [])]
+                    for sense in entry['senses']:
+                        try:
+                            meanings.append(sense['definitions'][0])
+                        except KeyError:
+                            continue
+                        examples = [
+                            x['text'] for x in sense.get('examples', [])
+                        ]
                     info = {
-                        'meaning': meaning,
+                        'meanings': meanings,
                         'examples': examples
                     }
                     data[category] = data.get(category, []) + [info]
@@ -110,10 +118,11 @@ class Meaning(SocketHandlerMixin):
     def display_meaning_data(self, data):
         s = '{}\n'.format(TerminalFormatter.bold(self.query.upper()))
         if not data:
-            return s + TerminalFormatter.red("No meaning found.")
+            return s + TerminalFormatter.red("Sorry, I don't know it now.")
         for k, v in data.items():
             s += TerminalFormatter.green(k) + "\n"
-            s += "  " + v[0]['meaning'] + "\n"
+            for m in v[0]['meanings']:
+                s += "- " + m + "\n"
             for e in v[0]['examples']:
                 s += TerminalFormatter.yellow('  "{}"'.format(e))+"\n"
         return s

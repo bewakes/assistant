@@ -172,6 +172,10 @@ execute_command() {
             echo $@ >&3
             msg=$(cat<&3)
             ;;
+        "clear")
+            clear >$(tty)
+            msg=""
+            ;;
         *)
             msg="Command not recognized"
             ;;
@@ -181,7 +185,9 @@ execute_command() {
 initialize
 
 while true; do
-    echo -e $prompt"$msg"
+    if [[ $msg != "" ]]; then
+        echo -e $prompt"$msg"
+    fi
     echo -n ">> "
     read -a command_args
     cmnd=${command_args[0]}
