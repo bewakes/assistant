@@ -32,6 +32,9 @@ class Youtube(SocketHandlerMixin):
 
         self._current_song_url = ""
         self._vlc_pid = None
+        self.FILENAME = 'songs'
+        self.songs = self.get_local_songs()
+        logger.info('local songs' + str(self.songs))
 
     def search(self, queryparam):
         params = dict(self._base_params)
@@ -55,9 +58,49 @@ class Youtube(SocketHandlerMixin):
             quality='tiny'
         )
 
+    def _get_path(self):
+        dirname = os.path.expanduser('~/.assistant')
+        path = os.path.join(dirname, self.FILENAME)
+        return path
+
+    def get_local_songs(self):
+        path = self._get_path()
+        songs = {}
+        try:
+            with open(path) as f:
+                for line in f.readlines():
+                    splitted = line.split()
+                    songname = ' '.join(splitted[1:])
+                    songs[songname] = splitted[0]
+        except FileNotFoundError:
+            return {}
+        return songs
+
+    def append_song_url_to_local_file(self, query, url):
+        with open(self._get_path(), 'a') as f:
+            f.write('{} {}\n'.format(url, query))
+
+    def local_result(self, query):
+        # TODO: a bit more sophisticated. This is too naive
+        for song in self.songs.keys():
+            if set(song.split()) == set(query.split()):
+                return self.songs[song]
+        return None
+
     def handle_song(self, args):
         query = ' '.join(args)
-        return self.search_and_get_first_videourl(query)
+        # first check if query song exists locally
+        result = self.local_result(query)
+        if result:
+            logger.info('Song found locally..')
+            return result
+        else:
+            logger.info('Song not found locally..')
+            result = self.search_and_get_first_videourl(query)
+            self.songs[query] = result
+            # append to file
+            self.append_song_url_to_local_file(query, result)
+            return result
 
     def handle_playlist(self, args):
         # TODO: implement
