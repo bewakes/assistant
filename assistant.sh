@@ -108,6 +108,12 @@ execute_command() {
         "playlist")
             execute_command vlc $@
             ;;
+        "next")
+            execute_command vlc $@
+            ;;
+        "previous")
+            execute_command vlc $@
+            ;;
         "stop")
             msg="Stopped"
             ;;

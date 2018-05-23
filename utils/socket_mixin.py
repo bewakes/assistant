@@ -2,6 +2,7 @@ import sys
 import signal
 import socket
 import subprocess
+import traceback
 
 from . import log
 from .helpers import try_encode
@@ -51,7 +52,8 @@ class SocketHandlerMixin(object):
         """
         try:
             # TODO: check status of _child_pids keys also
-            self.execute_command("kill -9 "+' '.join([str(x) for x in self._child_pids.keys()]))
+            child_pids = ' '.join([str(x) for x in self._child_pids.keys()])
+            self.execute_command("kill -9 " + child_pids)
         except Exception as e:
             print(e)
 
@@ -89,7 +91,13 @@ class SocketHandlerMixin(object):
             command = command.decode()
             args = list(map(lambda x: x.decode(), args))
 
-            result = self.handler(command, args)
+            try:
+                result = self.handler(command, args)
+            except Exception:
+                logger.info(traceback.format_exc())
+                # kill all the child processes
+                self.handle_killall()
+                result = 'Error occured. Please check log at /tmp/assistant.log.'  # noqa
 
             out = '{}\n'.format(result)
             conn.send(try_encode(out))

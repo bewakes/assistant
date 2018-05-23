@@ -30,7 +30,6 @@ class Youtube(SocketHandlerMixin):
             'key': self._key,
             'part': 'snippet',
         }
-
         self._current_song_url = ""
         self._vlc_pid = None
         self.FILENAME = 'songs'
@@ -96,23 +95,30 @@ class Youtube(SocketHandlerMixin):
         logger.info("QUERY: " + query)
         if query == 'random':
             song = random.choice(list(self.songs.keys()))
-            return self.songs[song]
+            return (song, self.songs[song])
         # first check if query song exists locally
         result = self.local_result(query)
         if result:
             logger.info('Song found locally..')
-            return result
+            return (query, result)
         else:
             logger.info('Song not found locally..')
             result = self.search_and_get_first_videourl(query)
             self.songs[query] = result
             # append to file
             self.append_song_url_to_local_file(query, result)
-            return result
+            return (query, result)
 
-    def handle_playlist(self, args):
-        # TODO: implement
-        return ""
+    def handle_search_playlist(self, args):
+        if not isinstance(args, list):
+            query = args
+        else:
+            query = ' '.join(args)
+        if query == 'random':
+            # shuffle the songs and send list of urls/paths
+            songs = list(self.songs.keys())
+            random.shuffle(songs)
+            return [(x, self.songs[x]) for x in songs]
 
     def handle_command(self, command):
         """
@@ -133,8 +139,9 @@ class Youtube(SocketHandlerMixin):
 class SongSearcher(Youtube):
     """Same as Youtube for now as it uses youtube search.
     """
-    # TODO: add searching in local file as well
+    # TODO: add searching songs in local directories as well
     pass
+
 
 if __name__ == '__main__':
     y = Youtube()
