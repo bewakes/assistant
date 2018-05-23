@@ -8,34 +8,10 @@ sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from utils.socket_mixin import SocketHandlerMixin  # noqa
 from utils import log # noqa
+from utils.terminal_formatter import Style
 
 
 logger = log.get_logger('Meaning service')
-
-
-class TerminalFormatter:
-    BLACK = '\033[30;47m'
-    RED = '\033[31m'
-    GREEN = '\033[32m'
-    YELLOW = '\033[33m'
-    BLUE = '\033[34;47m'
-    MAGENTA = '\033[35;47m'
-    CYAN = '\033[36;47m'
-    WHITE = '\033[37;47m'
-    NORMAL = '\033[0m'
-
-    @staticmethod
-    def bold(s):
-        return "\033[1m" + s + "\033[0m"
-
-    def green(s):
-        return TerminalFormatter.GREEN + s + TerminalFormatter.NORMAL
-
-    def red(s):
-        return TerminalFormatter.RED + s + TerminalFormatter.NORMAL
-
-    def yellow(s):
-        return TerminalFormatter.YELLOW + s + TerminalFormatter.NORMAL
 
 
 class Meaning(SocketHandlerMixin):
@@ -116,15 +92,15 @@ class Meaning(SocketHandlerMixin):
         return self.display_meaning_data(data)
 
     def display_meaning_data(self, data):
-        s = '{}\n'.format(TerminalFormatter.bold(self.query.upper()))
+        s = '{}\n'.format(Style.bold(self.query.upper()))
         if not data:
-            return s + TerminalFormatter.red("Sorry, I don't know it now.")
+            return s + Style.red("Sorry, I don't know it now.")
         for k, v in data.items():
-            s += TerminalFormatter.green(k) + "\n"
+            s += Style.green(k) + "\n"
             for m in v[0]['meanings']:
                 s += "- " + m + "\n"
             for e in v[0]['examples']:
-                s += TerminalFormatter.yellow('  "{}"'.format(e))+"\n"
+                s += Style.yellow('  "{}"'.format(e))+"\n"
         return s
 
 

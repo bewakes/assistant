@@ -24,6 +24,8 @@ class VLC(SocketHandlerMixin):
         self._vlc_audio_command = "cvlc -I telnet --telnet-password test --no-video {url} --preferred-resolution 144"  # noqa
         self.pause_command = 'echo -e test\npause\nquit\n'
         self.netcat_command = 'nc localhost 4212'
+        self.current_playlist = []
+        self.current_index = None
         self.playing = False
         self.searcher = SongSearcher()
 
@@ -63,19 +65,65 @@ class VLC(SocketHandlerMixin):
             # means play the paused
             output = self.handle_resume(args)
             return output
+        if args[0] == 'next':
+            return self.handle_next(args)
+        if args[0] == 'previous':
+            return self.handle_previous(args)
         song_query = ' '.join(args)
         logger.info("Searching song.." + song_query)
-        songpath = self.searcher.handle_search(song_query)
+        song, songpath = self.searcher.handle_search(song_query)
         logger.info("Song path found " + songpath)
         if not songpath:
             return "No song found"
+        self.current_playlist = [(song, songpath)]
         # kill children
         self.handle_killall()
         self._play_audio(songpath)
-        return "Playing {}".format(song_query)
+        return "Playing {}".format(song)
 
     def handle_playlist(self, args):
-        pass
+        # first handle random playlist
+        playlist_query = ' '.join(args)
+        logger.info("PLAYLIST QUERY: " + playlist_query)
+        songspaths = self.searcher.handle_search_playlist(playlist_query)
+        logger.info(songspaths)
+        self.current_playlist = songspaths
+        self.current_index = 0
+        self.handle_killall()
+        self._play_audio(songspaths[0][1])
+        return "Playing {}".format(songspaths[0][0])
+
+    def handle_next(self, args):
+        msg = None
+        if self.current_index is None or not self.current_playlist:
+            msg = "Nothing is being played"
+        elif self.current_index >= len(self.current_playlist) - 1:
+            msg = "End of playlist"
+        elif self.current_index < len(self.current_playlist) - 1:
+            self.current_index += 1
+            msg = "Playing " + self.current_playlist[self.current_index][0]
+            self.handle_killall()
+            self._play_audio(self.current_playlist[self.current_index][1])
+        else:
+            msg = "Something is not right"
+            # TODO: format
+        return msg
+
+    def handle_previous(self, args):
+        msg = None
+        if self.current_index is None or not self.current_playlist:
+            msg = "Nothing is being played"
+        elif self.current_index == 0:
+            msg = "Beginning of playlist"
+        elif self.current_index > 0:
+            self.current_index -= 1
+            msg = "Playing " + self.current_playlist[self.current_index][0]
+            self.handle_killall()
+            self._play_audio(self.current_playlist[self.current_index][1])
+        else:
+            msg = "Something is not right"
+            # TODO: format
+        return msg
 
 
 if __name__ == '__main__':
