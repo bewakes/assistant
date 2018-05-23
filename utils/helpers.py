@@ -1,6 +1,15 @@
 import subprocess
 
 
+def get_commands(command):
+    # TODO: enhance this, intelligent split
+    if isinstance(command, list):
+        splitted = command
+    else:
+        splitted = command.split('|')
+    return [x.strip().split(' ') for x in splitted]
+
+
 def pipe_commands(commands):
     if not commands:
         return

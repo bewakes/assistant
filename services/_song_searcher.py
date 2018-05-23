@@ -3,6 +3,7 @@ import traceback
 import urllib
 import os
 import sys
+import random
 
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
@@ -87,8 +88,15 @@ class Youtube(SocketHandlerMixin):
                 return self.songs[song]
         return None
 
-    def handle_song(self, args):
-        query = ' '.join(args)
+    def handle_search(self, args):
+        if not isinstance(args, list):
+            query = args
+        else:
+            query = ' '.join(args)
+        logger.info("QUERY: " + query)
+        if query == 'random':
+            song = random.choice(list(self.songs.keys()))
+            return self.songs[song]
         # first check if query song exists locally
         result = self.local_result(query)
         if result:
@@ -121,6 +129,12 @@ class Youtube(SocketHandlerMixin):
             # TODO: complete this
             return ''
 
+
+class SongSearcher(Youtube):
+    """Same as Youtube for now as it uses youtube search.
+    """
+    # TODO: add searching in local file as well
+    pass
 
 if __name__ == '__main__':
     y = Youtube()

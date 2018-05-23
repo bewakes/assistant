@@ -7,7 +7,8 @@ sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from utils.socket_mixin import SocketHandlerMixin  # noqa
 from utils import log  # noqa
-from utils.helpers import pipe_commands  # noqa
+from utils.helpers import pipe_commands, get_commands  # noqa
+from services._song_searcher import SongSearcher  # noqa
 
 
 logger = log.get_logger('VLC Service')
@@ -24,12 +25,13 @@ class VLC(SocketHandlerMixin):
         self.pause_command = 'echo -e test\npause\nquit\n'
         self.netcat_command = 'nc localhost 4212'
         self.playing = False
+        self.searcher = SongSearcher()
 
-    def _play_audio(self, args):
+    def _play_audio(self, path_or_location):
         """
         play audio with vlc
         """
-        url = args[0].replace('https', 'http')
+        url = path_or_location.replace('https', 'http')
         audi_commd = self._vlc_audio_command.format(url=url)
         logger.info('VLC command: {}'.format(audi_commd))
         process = subprocess.Popen(audi_commd.split())
@@ -40,37 +42,37 @@ class VLC(SocketHandlerMixin):
         # output, error = process.communicate()
 
     def handle_pause(self, args):
-        op = pipe_commands(
-            [x.split(' ') for x in (self.pause_command, self.netcat_command)]
+        pipe_commands(
+            get_commands([self.pause_command, self.netcat_command])
         )
         self.playing = False
-        return op
+        return "Paused"
 
     def handle_resume(self, args):
-        op = ""
         logger.info('handle resume')
         if not self.playing:
             # same command as pause
-            op = pipe_commands(
-                [x.split(' ') for x in (self.pause_command, self.netcat_command)]
+            pipe_commands(
+                get_commands([self.pause_command, self.netcat_command])
             )
-        return op
+        return "Resumed"
 
     def handle_play(self, args):
+        # TODO: for video, for now only audio
         if not args:
             # means play the paused
             output = self.handle_resume(args)
             return output
-        if args[0] == 'audio':
-            self.handle_killall()
-            self._play_audio(args[1:])
-            self.playing = True
-        elif args[0] == 'video':
-            self.handle_killall()
-            self._play_video(args[1:])
-            self.playing = True
-        else:
-            raise Exception("invalid argument")
+        song_query = ' '.join(args)
+        logger.info("Searching song.." + song_query)
+        songpath = self.searcher.handle_search(song_query)
+        logger.info("Song path found " + songpath)
+        if not songpath:
+            return "No song found"
+        # kill children
+        self.handle_killall()
+        self._play_audio(songpath)
+        return "Playing {}".format(song_query)
 
     def handle_playlist(self, args):
         pass

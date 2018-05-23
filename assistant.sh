@@ -99,52 +99,17 @@ initialize() {
 execute_command() {
     case $1 in
         "pause")
-            execute_command vlc pause
+            execute_command vlc $@
             #echo -e "test\npause\nquit" | nc localhost 4212
             ;;
         "play")
-            if [[ -z $2 ]];then
-                execute_command vlc play
-                # echo -e "test\npause\nquit" | nc localhost 4212
-            elif [[ "$2" == "random" ]]; then
-                # first read list from file
-                readarray songs_list < $HOME/.assistant/songs
-                # call get random function, value stored in $rand_song variable
-                getrandom
-                # and command vlc to play the audio
-                execute_command vlc play audio $rand_song
-            else
-                url=''
-                execute_command youtube song "$2"
-                if [[ -n $url ]];then
-                    # add the song to songs files, later used for random playing
-                    msg="Playing song '$2'"
-                    execute_command vlc play audio $url >> ~/.assistant_log #url will be updated in youtube command
-                else
-                    msg="NO song found"
-                fi
-            fi
+            execute_command vlc $@
             ;;
         "playlist")
-            url=''
-            execute_command youtube playlist_url "$2"
-            msg="Playing Playlist.. '$2'"
+            execute_command vlc $@
             ;;
         "stop")
             msg="Stopped"
-            ;;
-        "youtube")
-            ## get url of the song from youtube service
-
-            ## first get processid and port number for service(youtube)
-            exec 3<>/dev/tcp/localhost/${ports["youtube"]}
-
-            shift
-            ## send to socket
-            echo $@ >&3
-
-            ## read data from the socket
-            read -r url <&3
             ;;
         "vlc")
             exec 3<>/dev/tcp/localhost/${ports["vlc"]}
@@ -155,7 +120,7 @@ execute_command() {
 
             ## read data from the socket
             read -r tmp <&3
-            msg="Playing"
+            msg=$tmp
             ;;
         "bye")
             cleanup
