@@ -31,8 +31,9 @@ def pipe_commands(commands):
             commands[-1], stdin=curr_process.stdout, stdout=subprocess.PIPE
         )
         process.wait()
-        o = p.stdout.read()
-        return try_decode(o)
+        o = p.stdout.readlines()
+        op = [try_decode(x) for x in o]
+        return '\n'.join(op)
 
 
 def try_decode(b):

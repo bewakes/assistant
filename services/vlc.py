@@ -22,7 +22,11 @@ class VLC(SocketHandlerMixin):
         super().__init__()
         self._player_pid = None
         self._vlc_audio_command = "cvlc -I telnet --telnet-password test --no-video {url} --preferred-resolution 144"  # noqa
+        # self._vlc_audio_command = "cvlc -I oldrc --rc-unix /tmp/vlc.sock --no-video {url} --preferred-resolution 144"  # noqa
         self.pause_command = 'echo -e test\npause\nquit\n'
+        # self.pause_command = 'echo pause'
+        # self.netcat_command = 'nc -U /tmp/vlc.sock -q 0'
+        self.is_playing = 'echo -e test\r\nis_playing\r\nquit\r\n'
         self.netcat_command = 'nc localhost 4212'
         self.current_playlist = []
         self.current_index = None
@@ -35,16 +39,16 @@ class VLC(SocketHandlerMixin):
         """
         url = path_or_location.replace('https', 'http')
         audi_commd = self._vlc_audio_command.format(url=url)
-        logger.info('VLC command: {}'.format(audi_commd))
+        logger.info('VLC command: {}'.format(audi_commd.split()))
         process = subprocess.Popen(audi_commd.split())
         self._player_pid = process.pid
+        logger.info("vlc pid " + str(process.pid))
 
         # add pid to child_pids
         self._child_pids[process.pid] = True
-        # output, error = process.communicate()
 
     def handle_pause(self, args):
-        pipe_commands(
+        o = pipe_commands(
             get_commands([self.pause_command, self.netcat_command])
         )
         self.playing = False

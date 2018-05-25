@@ -134,6 +134,10 @@ execute_command() {
             cleanup
             exit 0
             ;;
+        "exit")
+            cleanup
+            exit 0
+            ;;
         "list")
             echo "LIST OF SONGS"
             cat $HOME/.assistant/songs
