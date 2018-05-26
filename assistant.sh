@@ -78,6 +78,8 @@ initialize() {
         echo songs file not found
         touch $HOME/.assistant/songs
     fi
+    # store music here
+    mkdir -p $HOME/Music/assistant/
 
     # first assign ports
     assign_ports
@@ -133,6 +135,11 @@ execute_command() {
             ;;
         "meaning")
             exec 3<>/dev/tcp/localhost/${ports["meaning"]}
+            echo $@ >&3
+            msg=$(cat<&3)
+            ;;
+        "download")
+            exec 3<>/dev/tcp/localhost/${ports["song_download"]}
             echo $@ >&3
             msg=$(cat<&3)
             ;;

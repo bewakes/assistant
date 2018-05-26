@@ -35,7 +35,6 @@ class Youtube(SocketHandlerMixin):
         self._vlc_pid = None
         self.FILENAME = 'songs'
         self.songs = self.get_local_songs()
-        logger.info('local songs' + str(self.songs))
 
     def search(self, queryparam):
         params = dict(self._base_params)
