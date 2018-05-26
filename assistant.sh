@@ -58,9 +58,13 @@ assign_ports() {
     ## Assign random ports to services.
     ## Ports are stored by 'ports' variable
     ##########################################
+    # To store services and ports to file which can be used by services to communicate with each other
+    rm /tmp/services-ports || touch /tmp/services-ports
     for s in ${services[@]}
     do
-        ports[$s]=$((RANDOM%2048+4213)) # 4213 because vlc uses 4212. TODO: retry if already used port
+        port=$((RANDOM%2048+4213)) # 4213 because vlc uses 4212. TODO: retry if already used port
+        ports[$s]=$port
+        echo $s $port >> /tmp/services-ports
     done
 }
 

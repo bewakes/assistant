@@ -15,6 +15,7 @@ class SocketHandlerMixin(object):
     Mixin to provide command handling interface to services
     """
     def __init__(self):
+        self.services_ports_file = '/tmp/services-ports'  # TODO: make static
         self._child_pids = {}
 
         def handle_sigterm(num, frame):
@@ -22,6 +23,12 @@ class SocketHandlerMixin(object):
             sys.exit()
 
         signal.signal(signal.SIGTERM, handle_sigterm)
+
+    def get_services_ports(self):
+        services_ports = {}
+        with open(self.services_ports_file) as f:
+            services_ports = dict([line.split() for line in f.readlines()])
+        return services_ports
 
     def execute_command(self, command, bg=True):
         """
@@ -74,6 +81,31 @@ class SocketHandlerMixin(object):
         logger.info('args: {}'.format(args))
         method = self.__getattribute__(methodname)
         return method(args)
+
+    def communicate(self, service, command):
+        """
+        @service: name of service
+        @command: string of command
+        """
+        services_ports = self.get_services_ports()
+        logger.info("services and ports: {}".format(str(services_ports)))
+        port = services_ports.get(service)
+        if not port:
+            logger.warn("service {} doesnot exist for communication".format(
+                service
+            ))
+            return ''
+        sock = socket.socket()
+        sock.connect(('localhost', port))
+        output = ''
+        while True:
+            sock.send(command+"\r\n")
+            r = sock.recv()
+            r = r.decode('ascii')
+            output += r+"\n"
+            if r == '$$':
+                break
+        return output
 
     def initialize_and_run(self, port, host=''):
         """
