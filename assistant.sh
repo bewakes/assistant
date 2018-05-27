@@ -120,6 +120,9 @@ execute_command() {
         "previous")
             execute_command vlc $@
             ;;
+        "repeat")
+            execute_command vlc $@
+            ;;
         "stop")
             msg="Stopped"
             ;;

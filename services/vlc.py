@@ -21,7 +21,7 @@ class VLC(SocketHandlerMixin):
     def __init__(self):
         super().__init__()
         self._player_pid = None
-        self._vlc_audio_command = "cvlc -I telnet --telnet-password test --no-video {url} --preferred-resolution 144"  # noqa
+        self._vlc_audio_command = "cvlc -I telnet --telnet-password test --no-video".split()  # noqa  # add url
         # self._vlc_audio_command = "cvlc -I oldrc --rc-unix /tmp/vlc.sock --no-video {url} --preferred-resolution 144"  # noqa
         self.pause_command = 'echo -e test\npause\nquit\n'
         # self.pause_command = 'echo pause'
@@ -38,9 +38,9 @@ class VLC(SocketHandlerMixin):
         play audio with vlc
         """
         url = path_or_location.replace('https', 'http')
-        audi_commd = self._vlc_audio_command.format(url=url)
-        logger.info('VLC command: {}'.format(audi_commd.split()))
-        process = subprocess.Popen(audi_commd.split())
+        audi_commd = self._vlc_audio_command + [url]
+        logger.info('VLC command: {}'.format(audi_commd))
+        process = subprocess.Popen(audi_commd)
         self._player_pid = process.pid
         logger.info("vlc pid " + str(process.pid))
 
@@ -80,6 +80,7 @@ class VLC(SocketHandlerMixin):
         if not songpath:
             return "No song found"
         self.current_playlist = [(song, songpath)]
+        self.current_index = 0
         # kill children
         self.handle_killall()
         self._play_audio(songpath)
@@ -96,6 +97,12 @@ class VLC(SocketHandlerMixin):
         self.handle_killall()
         self._play_audio(songspaths[0][1])
         return "Playing {}".format(songspaths[0][0])
+
+    def handle_repeat(self, args):
+        self.handle_killall()
+        song = self.current_playlist[self.current_index]
+        self._play_audio(song[1])
+        return 'Playing {}'.format(song[0])
 
     def handle_next(self, args):
         msg = None

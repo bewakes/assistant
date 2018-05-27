@@ -2,6 +2,7 @@ import requests
 import traceback
 import urllib
 import os
+import re
 import sys
 import random
 
@@ -24,6 +25,7 @@ class Youtube(SocketHandlerMixin):
     Service to query songs and get youtube urls from youtube api
     """
     def __init__(self):
+        self.songs_dir = os.path.expanduser('~/Music/assistant/')
         self._key = os.environ['API_KEY']
         self._url = 'https://www.googleapis.com/youtube/v3/search?{urlparams}'
         self._base_params = {
@@ -33,7 +35,7 @@ class Youtube(SocketHandlerMixin):
         self._current_song_url = ""
         self._vlc_pid = None
         self.FILENAME = 'songs'
-        self.songs = self.get_local_songs()
+        self.songs = self.get_songs_paths()
 
     def search(self, queryparam):
         params = dict(self._base_params)
@@ -62,7 +64,11 @@ class Youtube(SocketHandlerMixin):
         path = os.path.join(dirname, self.FILENAME)
         return path
 
-    def get_local_songs(self):
+    def get_songs_paths(self):
+        """
+        Return dict of song name and path or url of the song
+        """
+        # first create dict of songs: youtube url
         path = self._get_path()
         songs = {}
         try:
@@ -72,7 +78,17 @@ class Youtube(SocketHandlerMixin):
                     songname = ' '.join(splitted[1:])
                     songs[songname] = splitted[0]
         except FileNotFoundError:
-            return {}
+            songs = {}
+        # Now lookup in ~/Music/assistant/ dir
+        # this will override youtube url with local filepath
+        # List files in songs_dir
+        listing = [
+            x for x in os.listdir(self.songs_dir)
+            if os.path.isfile(os.path.join(self.songs_dir, x))
+        ]
+        for f in listing:
+            songname = re.match('^(.*)\.mp3$', f).groups(1)[0]
+            songs[songname] = os.path.join(self.songs_dir, f)
         return songs
 
     def append_song_url_to_local_file(self, query, url):
@@ -118,6 +134,7 @@ class Youtube(SocketHandlerMixin):
             songs = list(self.songs.keys())
             random.shuffle(songs)
             return [(x, self.songs[x]) for x in songs]
+        return None
 
     def handle_command(self, command):
         """
