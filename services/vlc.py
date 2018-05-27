@@ -7,8 +7,9 @@ sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from utils.socket_mixin import SocketHandlerMixin  # noqa
 from utils import log  # noqa
-from utils.helpers import pipe_commands, get_commands  # noqa
+from utils.helpers import pipe_commands, get_commands, is_url  # noqa
 from services._song_searcher import SongSearcher  # noqa
+from services.song_download import SongDownloader  # noqa
 
 
 logger = log.get_logger('VLC Service')
@@ -32,6 +33,7 @@ class VLC(SocketHandlerMixin):
         self.current_index = None
         self.playing = False
         self.searcher = SongSearcher()
+        self.downloader = SongDownloader()
 
     def _play_audio(self, path_or_location):
         """
@@ -48,7 +50,7 @@ class VLC(SocketHandlerMixin):
         self._child_pids[process.pid] = True
 
     def handle_pause(self, args):
-        o = pipe_commands(
+        pipe_commands(
             get_commands([self.pause_command, self.netcat_command])
         )
         self.playing = False
@@ -83,6 +85,11 @@ class VLC(SocketHandlerMixin):
         self.current_index = 0
         # kill children
         self.handle_killall()
+        # check if songpath is a file path, if not download it
+        if is_url(songpath):
+            logger.info("song not found locally, downloading")
+            r = self.downloader.download_url(songpath, song)
+            logger.info(r)
         self._play_audio(songpath)
         return "Playing {}".format(song)
 

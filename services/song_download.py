@@ -7,7 +7,7 @@ import subprocess
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from utils.socket_mixin import SocketHandlerMixin  # noqa
-from utils.helpers import pipe_commands, pipe_commands_bg  # noqa
+from utils.helpers import pipe_commands, pipe_commands_bg, is_url  # noqa
 from services._song_searcher import SongSearcher  # noqa
 from utils import log  # noqa
 
@@ -25,9 +25,15 @@ class SongDownloader(SocketHandlerMixin):
         self.download_command = "youtube-dl {url} --extract-audio --audio-format mp3 -o '{dir}%(id)s.%(ext)s'".format(  # noqa
             dir=SongDownloader.DOWNLOAD_PATH, url='{url}'
         )
-        #self.rename_command = 'mv '+path+'{video_id}.mp3 '+path+'{songname}.mp3'  # noqa
-        self.searcher = SongSearcher()
+        self._searcher = None   # don't initialize it here
         self.downloader_pid = None
+
+    @property
+    def searcher(self):
+        # initialize only when needed coz it reads from file
+        if not self._searcher:
+            self._searcher = SongSearcher()
+        return self._searcher
 
     def _get_rename_command(self, video_id, song_name):
         rename_command = 'mv {}{}.mp3 "{}{}.mp3"'.format(
@@ -39,6 +45,7 @@ class SongDownloader(SocketHandlerMixin):
         return rename_command
 
     def download_url(self, url, song):
+        logger.info('video url: {}'.format(url))
         video_id = re.match('.*=(.*)$', url).groups(1)[0]
         dl_command = self.download_command.format(url=url)
         rename_command = self._get_rename_command(video_id, song)
@@ -46,17 +53,18 @@ class SongDownloader(SocketHandlerMixin):
         subprocess.Popen(cmd, shell=True)
         return "Song Download is in progress."
 
-    @staticmethod
-    def is_url(string):
-        return re.match('[a-z]+://.+', string)
-
     def handle_download(self, args):
         """Args contains song"""
         if not args:
             return "No song provided"  # TODO: format color
         song = ' '.join(args)
         song, url = self.searcher.handle_search(song)
-        return self.download_url(url, song)
+        if is_url(url):
+            return self.download_url(url, song)
+        elif os.path.isfile(url):
+            return "Song alrady downloaded"
+        else:
+            return "Not a valid url to download"  # TODO: format color
 
 
 if __name__ == '__main__':

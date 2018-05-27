@@ -1,4 +1,5 @@
 import subprocess
+import re
 
 
 def get_commands(command):
@@ -76,3 +77,7 @@ def try_encode(b):
         except Exception:
             pass
     raise Exception('could not encode')
+
+
+def is_url(string):
+    return re.match('[a-z]+://.+', string)
