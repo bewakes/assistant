@@ -49,7 +49,7 @@ class Meaning(SocketHandlerMixin):
         self.meanings = meanings
 
     def handle_meaning(self, args):
-        self.query = args[0]
+        self.query = ' '.join(args)
         if self.meanings.get(self.query.lower()):
             logger.info("returning from local file")
             return self.display_meaning_data(self.meanings[self.query.lower()])
