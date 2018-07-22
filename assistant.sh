@@ -59,7 +59,7 @@ assign_ports() {
     ## Ports are stored by 'ports' variable
     ##########################################
     # To store services and ports to file which can be used by services to communicate with each other
-    rm /tmp/services-ports || touch /tmp/services-ports
+    rm /tmp/services-ports >/dev/null || touch /tmp/services-ports
     for s in ${services[@]}
     do
         port=$((RANDOM%2048+4213)) # 4213 because vlc uses 4212. TODO: retry if already used port
@@ -152,6 +152,11 @@ execute_command() {
             ;;
         "meaning")
             exec 3<>/dev/tcp/localhost/${ports["meaning"]}
+            echo $@ >&3
+            msg=$(cat<&3)
+            ;;
+        "translate")
+            exec 3<>/dev/tcp/localhost/${ports["translate"]}
             echo $@ >&3
             msg=$(cat<&3)
             ;;

@@ -87,7 +87,10 @@ class Youtube(SocketHandlerMixin):
             if os.path.isfile(os.path.join(self.songs_dir, x))
         ]
         for f in listing:
-            songname = re.match('^(.*)\.mp3$', f).groups(1)[0]
+            match = re.match('^(.*)\.mp3$', f)
+            if not match:
+                continue
+            songname = match.groups(1)[0]
             songs[songname] = os.path.join(self.songs_dir, f)
         return songs
 
