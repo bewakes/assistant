@@ -10,11 +10,23 @@ I am very lazy. So, I'm going to make my assistant do things for me.
 - Internet(because songs are streamed from youtube)
 
 ## current features 
+### music
 - play <song_name> : plays the song from youtube
 - pause : pauses the song
 - play : resumes song
 - play random : plays random song from your play history
+- playlist random: plays random songs
+- next: plays next song in list
+- previous: plays previous song in list
+- *however, songs are not auto played after one is complete.* **will do that very soon**
+### word meaning [requires oxford dictionary api key]
+- meaning {phrase} : shows meaning and sentence of the phrase 
+### translation
+- translate {some non-english text} : translates to english
+### other
+- clear: clears screen
 - bye : exits 
+- exit: exits
 
 *No playlists implemented though*
 
