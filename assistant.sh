@@ -169,8 +169,30 @@ execute_command() {
             clear >$(tty)
             msg=""
             ;;
+        "list_services")
+            echo Services Available: ${services[@]}
+            msg=""
+            ;;
+        "set_context")
+            echo setting context $2
+            msg=""
+            context=$2
+            ;;
+        "clear_context")
+            echo Getting out of $context context 
+            context=
+            msg=''
+            ;;
+        "which_context")
+            echo Your are in the $context context 
+            msg=''
+            ;;
         *)
-            msg="Command not recognized"
+            if [[ $context != "" ]]; then
+                execute_command $context $@
+            else
+                msg="Command not recognized"
+            fi
             ;;
     esac
 }
