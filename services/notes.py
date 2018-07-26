@@ -20,10 +20,11 @@ class NotesService(SocketHandlerMixin):
     """
     Service to take notes
     * First notes are stored alphabetwise
-    *Notes are stored tagwise
+    *Notes are stored/indexed tagwise and datewise
     """
     NOTES_ROOT = os.path.expanduser('~/.assistant/notes/')
     TAGS_DIR = os.path.join(NOTES_ROOT, 'tags/')
+    DATES_DIR = os.path.join(NOTES_ROOT, 'dates/')
     COUNTS_FILENAME = 'counts.json'
 
     def __init__(self):
@@ -31,6 +32,7 @@ class NotesService(SocketHandlerMixin):
         # try create dirs
         os.system('mkdir -p '+self.NOTES_ROOT)
         os.system('mkdir -p '+self.TAGS_DIR)
+        os.system('mkdir -p '+self.DATES_DIR)
         # get count_data
         self.count_filepath = os.path.join(
             self.NOTES_ROOT, self.COUNTS_FILENAME
@@ -85,16 +87,21 @@ class NotesService(SocketHandlerMixin):
         self.count_data[first_char] = self.count_data.get(first_char, 0) + 1
         self.update_count_data()
 
+        indexed_content = '{}{} {}'.format(
+            first_char,
+            self.count_data[first_char],
+            now
+        )
         # also add to tags
         for tag in tags:
             tagpath = os.path.join(self.TAGS_DIR, tag)
             with open(tagpath, 'a') as f:
-                content = '{}{} {}'.format(
-                    first_char,
-                    self.count_data[first_char],
-                    now
-                )
-                f.write(content + '\n')
+                f.write(indexed_content + '\n')
+
+        # add to date folder
+        datepath = os.path.join(self.DATES_DIR, now[:10])
+        with open(datepath, 'a') as f:
+            f.write(indexed_content + '\n')
 
         return Style.green('Note added to the following tags: '+' '.join(tags))
 
