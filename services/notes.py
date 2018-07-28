@@ -105,6 +105,44 @@ class NotesService(SocketHandlerMixin):
 
         return Style.green('Note added to the following tags: '+' '.join(tags))
 
+    def handle_show(self, args):
+        # TODO: date  query
+        searchby = args[0].strip()
+        if searchby == 'tag':
+            tagname = args[1].strip()
+            tagpath = os.path.join(self.TAGS_DIR, tagname)
+            # open tag file
+            data = self.read_file(tagpath)
+            if not data:
+                return Style.red('Tag not found')
+            splitted = [x for x in data.split('\n') if x.strip()]
+            notes = [x.split()[0] for x in splitted]
+            # now open notes file and load data
+            opened_notes = {}
+            notes_for_tag = ['\n']
+            for n in notes:
+                if not n[0] in opened_notes:  # open file and store in the dict
+                    path = os.path.join(self.NOTES_ROOT, n[0])
+                    notedata = self.read_file(path)
+                    if not notedata:
+                        continue
+                    notes = notedata.split('\n')
+                    opened_notes[n[0]] = [x for x in notes if x.strip()]
+                index = int(n[1:]) - 1
+                note = opened_notes[n[0]][index]
+                notes_for_tag.append(note.split('_ ->')[1])
+            return Style.green('\n - '.join(notes_for_tag))
+        else:
+            return Style.red('Please search by tags for now')
+
+    @staticmethod
+    def read_file(path):
+        try:
+            with open(path) as f:
+                return f.read()
+        except FileNotFoundError:
+            return None
+
 
 if __name__ == '__main__':
     n = NotesService()
