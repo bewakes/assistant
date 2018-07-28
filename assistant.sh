@@ -93,7 +93,7 @@ initialize() {
     do
         # make each service run and listen to the port specified
         # NOTE: the first argument will be the assigned port number to listen
-        python3 "$ASSISTANT_DIR"services/$s.py ${ports[$s]} 2>/dev/null &
+        python3 "$ASSISTANT_DIR"services/$s.py ${ports[$s]} &
 
         pids[$s]=$! # storing corresponding pid
 
@@ -186,6 +186,16 @@ execute_command() {
         "which_context")
             echo Your are in the $context context 
             msg=''
+            ;;
+        "note")
+            exec 3<>/dev/tcp/localhost/${ports["notes"]}
+            shift
+            echo $@ >&3
+            msg=$(cat<&3)
+            ;;
+        "notes")
+            shift
+            execute_command note $@
             ;;
         *)
             if [[ $context != "" ]]; then

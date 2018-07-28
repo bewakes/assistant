@@ -121,7 +121,7 @@ class SocketHandlerMixin(object):
             splitted = raw_command.split()
             command, args = splitted[0], splitted[1:]
             command = command.decode()
-            args = list(map(lambda x: x.decode(), args))
+            args = [x.decode() for x in args]
 
             try:
                 result = self.handler(command, args)
