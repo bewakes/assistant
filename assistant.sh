@@ -76,6 +76,7 @@ initialize() {
     ## Each pid is stored in 'pids' variable.
     ###########################################
 
+    source ${ASSISTANT_DIR}venv/bin/activate
     # to store data
     mkdir -p $HOME/.assistant/
     if [[ ! -f $HOME/.assistant/songs ]]; then

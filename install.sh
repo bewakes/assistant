@@ -29,7 +29,7 @@ else
     echo "CHECKING REQUIREMENTS..."
     echo
     # check netcat
-    check_installed netcat
+    #check_installed netcat
     # check vlc
     check_installed vlc
     # check youtube-dl
@@ -38,6 +38,10 @@ else
     echo "Setting up Env Variable ASSISTANT_DIR..."
     echo "export ASSISTANT_DIR=`pwd`/" >> ~/.bashrc
     echo
+
+    echo "Creating virtualenv for assistant"
+    virtualenv -p `which python3` ${ASSISTANT_DIR}venv
+    source ${ASSISTANT_DIR}venv/bin/activate && pip install -r requirements.txt
 
     echo "CONGRATULATIONS!! Your Assistant is now ready. And you are more lazier. ;)"
 fi
