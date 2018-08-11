@@ -9,8 +9,8 @@ I am very lazy. So, I'm going to make my assistant do things for me.
 - telnet and netcat (to communicate with vlc, like play/pause/next etc)  
 - Internet(because songs are streamed from youtube)
 
-## current features 
-### music
+## Current Features 
+### Music
 - play <song_name> : plays the song from youtube
 - pause : pauses the song
 - play : resumes song
@@ -19,11 +19,15 @@ I am very lazy. So, I'm going to make my assistant do things for me.
 - next: plays next song in list
 - previous: plays previous song in list
 - *however, songs are not auto played after one is complete.* **will do that very soon**
-### word meaning [requires oxford dictionary api key]
+### Word meaning [requires oxford dictionary api key]
 - meaning {phrase} : shows meaning and sentence of the phrase 
-### translation
+### Translation
 - translate {some non-english text} : translates to english
-### other
+### Reminder
+- set a reminder, which will be shown to you by nofification program(dunstify in this case)
+- example command: `reminder set every 2 mins I have to breathe`. And *dunstify* will notify you every 2 minutes
+- allowed time periods: hour, hours, min, mins, minute, minutes, day, days
+### Other
 - clear: clears screen
 - bye : exits 
 - exit: exits
