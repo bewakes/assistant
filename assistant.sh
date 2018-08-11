@@ -198,6 +198,12 @@ execute_command() {
             shift
             execute_command note $@
             ;;
+        "reminder")
+            exec 3<>/dev/tcp/localhost/${ports["reminder"]}
+            shift
+            echo $@ >&3
+            msg=$(cat<&3)
+            ;;
         *)
             if [[ $context != "" ]]; then
                 execute_command $context $@
