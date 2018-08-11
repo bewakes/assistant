@@ -3,7 +3,7 @@
 check_installed() {
     echo -n Checking if $1 is installed..
     $1 --version > /dev/null 2>/dev/null
-    if [[ $? != "0" ]]; then
+    if [[ $? == "127" ]]; then
         echo NOT INSTALLED
         echo
         echo INSTALLATION FAILED: "'$1' required. Please install it and then re-run the installer."
@@ -34,6 +34,8 @@ else
     check_installed vlc
     # check youtube-dl
     check_installed youtube-dl
+    # check dunstify
+    check_installed dunstify
 
     echo "Setting up Env Variable ASSISTANT_DIR..."
     echo "export ASSISTANT_DIR=`pwd`/" >> ~/.bashrc
