@@ -30,14 +30,18 @@ class SocketHandlerMixin(object):
             services_ports = dict([line.split() for line in f.readlines()])
         return services_ports
 
-    def execute_command(self, command, bg=True):
+    def execute_command(self, command, bg=True, ignore_result=True):
         """
         Execute command and return pid
         """
         if type(command) == str:
             command = command.split()
         # other wise, it is list(assumption)
-        process = subprocess.Popen(command)
+        if ignore_result:
+            process = subprocess.Popen(
+                command, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+        else:
+            process = subprocess.Popen(command)
 
         if not bg:
             output, error = process.communicate()

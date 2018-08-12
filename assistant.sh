@@ -3,14 +3,14 @@ source "$ASSISTANT_DIR"helpers.sh
 
 ## TRAP AND CLEANUP
 cleanup() {
-    echo 'cleaning up'
+    echo -n 'Cleaning up...'
     # Now kill each services, which keep track of children themselves
     # each will kill itself and its children with SIGTERM signal
     for id in ${pids[@]}
     do
-        kill $id
+        kill $id 2> /dev/null
     done
-    echo cleaned up
+    echo DONE
     exit 0
 }
 
