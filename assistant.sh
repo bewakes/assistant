@@ -161,6 +161,12 @@ execute_command() {
             echo $@ >&3
             msg=$(cat<&3)
             ;;
+        "translateto")
+            exec 3<>/dev/tcp/localhost/${ports["translate"]}
+            echo $@ >&3
+            msg=$(cat<&3)
+            ;;
+
         "download")
             exec 3<>/dev/tcp/localhost/${ports["song_download"]}
             echo $@ >&3
@@ -180,12 +186,16 @@ execute_command() {
             context=$2
             ;;
         "clear_context")
-            echo Getting out of $context context 
+            echo Getting out of "$context" context 
             context=
             msg=''
             ;;
         "which_context")
-            echo Your are in the $context context 
+            if [[ $context == "" ]]; then
+                echo No context set
+            else
+                echo Your are in the $context context 
+            fi
             msg=''
             ;;
         "note")
