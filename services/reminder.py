@@ -10,6 +10,7 @@ sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from utils.socket_mixin import SocketHandlerMixin  # noqa
 from utils.terminal_formatter import Style  # noqa
+from utils.helpers import parse_integer  # noqa
 from utils import log  # noqa
 
 logger = log.get_logger('Reminder')
@@ -61,41 +62,7 @@ class ReminderService(SocketHandlerMixin):
         self.update_cron(newjobs)
         return Style.green("Removed the reminder")
 
-    def handle_set(self, args):
-        """
-        @args: list of args
-        """
-        if not len(args) >= 4 or args[0] != 'every':
-            return self.invalid_msg
-        # parse number
-        timeval = args[1]
-        try:
-            int(timeval)
-        except ValueError:
-            return self.invalid_msg
-        # check interval
-        interval = args[2]
-        if interval not in self.VALID_TIMES:
-            return Style.red(
-                "Invalid interval '{}'. Supported intervals are: {}".
-                format(interval, str(self.VALID_TIMES))
-            )
-        # everything okay
-        msg = ' '.join(args[3:])
-        timestr = "{} {} {} * *"
-        m = h = d = "*"
-        if "min" in interval:
-            m = "*/"+timeval
-        elif "hour" in interval:
-            m = "0"
-            h = "*/"+timeval
-        elif "day" in interval:  # this does not seem very useful
-            m = h = "0"
-            d = "*/"+timeval
-        timestr = timestr.format(m, h, d)
-        cronentry = '{} DISPLAY=:0.0 dunstify REMINDER "{}"'.format(
-            timestr, msg
-        )
+    def set(self, cronentry):
         # hash and get first 6 hex
         hashed = hashlib.md5(cronentry.encode()).hexdigest()[:4]
         cronentry += " # ASSISTANT "+hashed
@@ -108,8 +75,64 @@ class ReminderService(SocketHandlerMixin):
             return Style.green("Reminder could not be set: " + e)
         return Style.green('Your new reminder has been set!')
 
+    def set_at(self, message, time):
+        try:
+            hour, min = time.split(':')
+        except Exception:
+            return Style.red(
+                "Invalid time {}".format(time)
+            )
+        timestr = "{} {} * * *".format(min, hour)
+        cronentry = "{} DISPLAY=:0.0 DBUS_SESSION_BUS_ADDRESS=unix:path=/run/user/1000/bus dunstify REMINDER '{}'".format(  # noqa
+            timestr, message
+        )
+        return self.set(cronentry)
+
+    def set_every(self, message, timeval, interval):
+        if interval not in self.VALID_TIMES:
+            return Style.red(
+                "Invalid interval '{}'. Supported intervals are: {}".
+                format(interval, str(self.VALID_TIMES))
+            )
+        # everything okay
+        timestr = "{} {} {} * *"
+        m = h = d = "*"
+        if "min" in interval:
+            m = "*/"+timeval
+        elif "hour" in interval:
+            m = "0"
+            h = "*/"+timeval
+        elif "day" in interval:  # this does not seem very useful
+            m = h = "0"
+            d = "*/"+timeval
+        timestr = timestr.format(m, h, d)
+        cronentry = "{} DISPLAY=:0.0 DBUS_SESSION_BUS_ADDRESS=unix:path=/run/user/1000/bus dunstify REMINDER '{}'".format(  # noqa
+            timestr, message
+        )
+        return self.set(cronentry)
+
+    def handle_set(self, args):
+        """
+        @args: list of args
+        """
+        if not len(args) >= 4:
+            return self.invalid_msg
+
+        interval = args[2]
+
+        timeval = args[1]
+        if args[0] == 'every':
+            msg = ' '.join(args[3:])
+            # parse number
+            if parse_integer(timeval) is None:
+                return self.invalid_msg
+            return self.set_every(msg, timeval, interval)
+        elif args[0] in ['in', 'on', 'at']:
+            msg = ' '.join(args[2:])
+            return self.set_at(msg, timeval)
+
     def update_cron(self, jobs):
-        # write to a tempfile
+        # Write to a tempfile
         with open('/tmp/assistant.cron', 'w') as f:
             f.write('\n'.join(jobs))
             f.write('\n')
@@ -125,5 +148,5 @@ if __name__ == '__main__':
     # run it
     try:
         r.initialize_and_run(port)
-    except Exception as e:
+    except Exception:
         print(traceback.format_exc())

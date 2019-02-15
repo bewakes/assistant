@@ -73,6 +73,7 @@ class Meaning(SocketHandlerMixin):
                 category = lex_entry['lexicalCategory']
                 for entry in lex_entry['entries']:
                     meanings = []
+                    examples = []
                     sense = entry['senses'][0]
                     for sense in entry['senses']:
                         try:

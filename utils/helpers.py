@@ -81,3 +81,10 @@ def try_encode(b):
 
 def is_url(string):
     return re.match('[a-z]+://.+', string)
+
+
+def parse_integer(string):
+    try:
+        return int(string.strip())
+    except (ValueError, TypeError):
+        return None

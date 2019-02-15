@@ -47,4 +47,4 @@ else
 
     echo "CONGRATULATIONS!! Your Assistant is now ready. And you are more lazier. ;)"
 fi
-echo "NOTE: Don't forget to source your bashrc"
+echo "NOTE: Don't forget to source your bashrc!!"

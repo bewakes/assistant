@@ -13,6 +13,7 @@ LANGUAGE_CODE_MAP = {
     'german': 'de',
     'spanish': 'es',
     'french': 'fr',
+    'nepali': 'np',
 }
 
 
