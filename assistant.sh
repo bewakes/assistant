@@ -208,6 +208,11 @@ execute_command() {
             shift
             execute_command note $@
             ;;
+        "calc")
+            exec 3<>/dev/tcp/localhost/${ports["calc"]}
+            echo $@ >&3
+            msg=$(cat<&3)
+            ;;
         "reminder")
             exec 3<>/dev/tcp/localhost/${ports["reminder"]}
             shift
