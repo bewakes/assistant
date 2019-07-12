@@ -210,7 +210,7 @@ execute_command() {
             ;;
         "calc")
             exec 3<>/dev/tcp/localhost/${ports["calc"]}
-            echo $@ >&3
+            echo "$@" >&3
             msg=$(cat<&3)
             ;;
         "reminder")

@@ -21,7 +21,7 @@ class Calculator(SocketHandlerMixin):
         try:
             return Style.green(str(eval(expression)))
         except Exception as e:
-            return Style.red(''.join(e.args))
+            return Style.red(str(e))
 
 
 if __name__ == '__main__':
