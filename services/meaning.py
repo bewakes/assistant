@@ -20,7 +20,7 @@ class Meaning(SocketHandlerMixin):
     """
     def __init__(self):
         super().__init__()
-        self.url = 'https://od-api.oxforddictionaries.com:443/api/v1/entries/{}/{}'  # noqa
+        self.url = 'https://od-api.oxforddictionaries.com:443/api/v2/entries/{}/{}'  # noqa
         self.app_id = os.environ.get('OXFORD_APP_ID', '')
         self.app_key = os.environ.get('OXFORD_APP_KEY', '')
         self.query = None
@@ -54,7 +54,7 @@ class Meaning(SocketHandlerMixin):
             logger.info("returning from local file")
             return self.display_meaning_data(self.meanings[self.query.lower()])
 
-        language = 'en'
+        language = 'en-us'
         url = self.url.format(
             language, self.query.lower()
         )
@@ -70,7 +70,7 @@ class Meaning(SocketHandlerMixin):
         logger.info(raw_data)
         for result in raw_data['results']:
             for lex_entry in result['lexicalEntries']:
-                category = lex_entry['lexicalCategory']
+                category = lex_entry['lexicalCategory']['id']
                 for entry in lex_entry['entries']:
                     meanings = []
                     examples = []
