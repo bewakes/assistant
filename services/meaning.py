@@ -45,7 +45,7 @@ class Meaning(SocketHandlerMixin):
         meanings[self.query.lower()] = data
         path = self._get_path()
         with open(path, 'w') as f:
-            f.write(json.dumps(meanings))
+            f.write(json.dumps(meanings, indent=2))
         self.meanings = meanings
 
     def handle_meaning(self, args):
