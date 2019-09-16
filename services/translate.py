@@ -6,6 +6,7 @@ sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from utils.socket_mixin import SocketHandlerMixin  # noqa
 from utils import log # noqa
+from utils.terminal_formatter import Style  # noqa
 
 logger = log.get_logger('Translate service')
 
@@ -16,6 +17,8 @@ LANGUAGE_CODE_MAP = {
     'nepali': 'np',
 }
 
+LANGUAGE_CODE_REVERSE = {v: k for k, v in LANGUAGE_CODE_MAP.items()}
+
 
 class Translate(SocketHandlerMixin):
     def __init__(self):
@@ -24,7 +27,9 @@ class Translate(SocketHandlerMixin):
 
     def handle_translate(self, args):
         self.query = ' '.join(args)
-        return self.translator.translate(self.query).text
+        translated = self.translator.translate(self.query)
+        source = LANGUAGE_CODE_REVERSE.get(translated.src, translated.src).title()
+        return Style.green(source + ': ') + Style.yellow(translated.text)
 
     def handle_translateto(self, args):
         if len(args) < 2:
