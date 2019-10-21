@@ -116,3 +116,28 @@ def parse_iso_date(date_str):
 
 def to_local_date(date):
     return date.astimezone(tz.gettz())
+
+
+def parse_duration(dur):
+    """
+    Parse strings like last month, year, etc to (1, month), (2, month), etc
+    """
+    duration = None
+    n = 1
+    if 'last' in dur:
+        dur = dur.replace('last', '').strip()
+        if 'month' in dur:
+            dur = dur.replace('months', '').replace('month', '').strip()
+            duration = 'month'
+        elif 'year' in dur:
+            dur = dur.replace('years', '').replace('year', '').strip()
+            duration = 'year'
+        elif 'week' in dur:
+            dur = dur.replace('weeks', '').replace('week', '').strip()
+            duration = 'week'
+        elif 'day' in dur:
+            dur = dur.replace('days', '').replace('day', '').strip()
+            duration = 'day'
+        # Now parse any number left
+        n = parse_integer(dur) or 1
+    return duration, n

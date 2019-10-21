@@ -15,6 +15,7 @@ from utils import http  # noqa
 from utils.helpers import (  # noqa
     parse_iso_date,
     return_on_exception,
+    parse_duration,
 )
 
 
@@ -26,10 +27,14 @@ ADD_REGEX = re.compile(r'^\W*(?P<category>.*?)\W+(?P<amount>\d+\.{0,1}\d*)'
                        r'(\W+::\W*(?P<date>.*?)){0,1}'
                        r'(\W+:\W*(?P<description>.*)){0,1}$')
 
+SHOW_REGEX = re.compile(r'.*for\W+(?P<duration>.*)$')
+
 BASE_URL = 'https://expenses.bewakes.com/'
 IDENTITY_URL = f'{BASE_URL}identity/'
 CATEGORY_URL = f'{BASE_URL}categories/'
 EXPENSES_URL = f'{BASE_URL}expense/'
+
+SHOW_USAGE_TEXT = 'Usage: expense show [categories|(expenses [for YYYY-MM-DD])]'
 
 
 class Expense(SocketHandlerMixin):
@@ -96,13 +101,16 @@ class Expense(SocketHandlerMixin):
     @return_on_exception
     def handle_show(self, args):
         if not args:
-            raise Exception('Nothing to show. Usage: expense show categories|expenses')
+            return self.show_expenses(args)
+
         if args[0].lower() == 'categories':
             categories = self.get_categories()
             cat_str = '\n'.join([Style.green(x) for x in categories.keys()])
             return f'Categories:\n{cat_str}'
         elif args[0].lower() == 'expenses':
-            return f'Expenses:\n{Style.green("Not implemented yet")}'
+            return self.show_expenses(args)
+        elif args[0].lower() == 'summary':
+            return self.show_expenses(args)
         else:
             raise Exception('Usage: expense show categoies|expenses')
 
@@ -165,6 +173,77 @@ class Expense(SocketHandlerMixin):
             return self._categories
         raise Exception('ERROR: ' + response.text[:100])
 
+    def get_expenses(self, data):
+        data['organization'] = self.identity['default_organization']['id']
+        response = http.get(EXPENSES_URL, data, self.get_token_header())
+
+        if response.status_code == 200:
+            return response.json()
+        else:
+            raise Exception('Error: ' + response.text[:100])
+
+    def show_expenses(self, args):
+        data = {}
+
+        if args and args[0] == 'summary':
+            data['individual'] = 'true'
+            match = SHOW_REGEX.match(' '.join(args[1:]))
+            duration_str = match and match.group('duration')
+            if not duration_str:
+                duration, n = 'week', 1
+            else:
+                duration, n = parse_duration(duration_str)
+            data['duration'] = duration
+            data['n'] = n
+
+            expenses = self.get_expenses(data)
+            return self.get_summary_string(expenses)
+
+        """
+        params = args[1:]
+        if params and params[0] == 'for':
+            if not params[1:]:
+                raise Exception(SHOW_USAGE_TEXT)
+            data['forDate'] = params[1]
+        """
+
+        expenses = self.get_expenses(data)
+
+        header = Style.yellow(f"\n{'Date'.ljust(15)}Total\n")
+        header += Style.yellow('='*len(header)) + '\n'
+
+        expense_data = ''
+        for expense in expenses:
+            expense_data += Style.green(f"{expense['date'].ljust(15)}{expense['total']}") + '\n'
+        return f'{header}{expense_data}'
+
+    def get_summary_string(self, expenses):
+        categories_reverse_map = {v: k for k, v in self.get_categories().items()}
+        header = Style.yellow(f"\n{'Date'.ljust(15)}{'Category'.ljust(20)}{'Price'.ljust(10)}{'Items'.ljust(25)}{'Description'.ljust(25)}\n")
+        header += Style.yellow('='*len(header)) + '\n'
+
+        print_colors = [Style.green, Style.magenta]
+        color_index = 0
+        curr_date = None
+
+        summary_string = ''
+        for expense in expenses:
+            date = expense['date']
+
+            if curr_date is not None and date != curr_date:
+                color_index = (color_index + 1) % 2
+            curr_date = date
+
+            category = categories_reverse_map[expense['category']]
+            price = expense['cost']
+            items = expense['items'] or '---'
+            description = expense['description'] or '---'
+            summary_string += print_colors[color_index](
+                f'{date.ljust(15)}{category.ljust(20)}'
+                f'{str(price).ljust(10)}{items.ljust(25) if len(items) < 25 else (items[:21] + "...").ljust(25)}'
+                f'{description.ljust(25)}\n'
+            )
+        return f'{header}{summary_string}'
 
 if __name__ == '__main__':
     e = Expense()
