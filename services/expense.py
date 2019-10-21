@@ -30,6 +30,7 @@ ADD_REGEX = re.compile(r'^\W*(?P<category>.*?)\W+(?P<amount>\d+\.{0,1}\d*)'
 SHOW_REGEX = re.compile(r'.*for\W+(?P<duration>.*)$')
 
 BASE_URL = 'https://expenses.bewakes.com/'
+# BASE_URL = 'http://localhost:8000/'
 IDENTITY_URL = f'{BASE_URL}identity/'
 CATEGORY_URL = f'{BASE_URL}categories/'
 EXPENSES_URL = f'{BASE_URL}expense/'
@@ -77,7 +78,7 @@ class Expense(SocketHandlerMixin):
 
         match = ADD_REGEX.match(' '.join(args))
         if match is None:
-            return Style.yellow('Usage: expense add <category> <amount> <comma separated items> [:: <date>] [: <description>]')
+            return Style.yellow('Usage: expense add <category> <amount> items <comma separated items> [:: <date>] [: <description>]')
 
         date = self.validate_date(match.group('date'))
         category = self.validate_category(match.group('category'))
@@ -94,9 +95,17 @@ class Expense(SocketHandlerMixin):
         if description:
             data['description'] = description
 
-        print(data)
-        # TODO: post and return message
-        return Style.green('So far so good')
+        print('calling http post')
+        response = http.post(EXPENSES_URL, data, self.get_token_header())
+        if response.status_code == 201:
+            return Style.green(f'Expense of Rs.{data["cost"]} added for {data["date"]}.')
+        elif response.status_code == 403:
+            raise Exception('Maybe CSRF Failed')
+        elif response.status_code == 400:
+            data = response.json()
+            raise Exception(f'Invalid {data.keys()[0]}.')
+        else:
+            raise Exception(f'Unexpected Error: {response.text[:100]}')
 
     @return_on_exception
     def handle_show(self, args):
@@ -238,12 +247,14 @@ class Expense(SocketHandlerMixin):
             price = expense['cost']
             items = expense['items'] or '---'
             description = expense['description'] or '---'
+
             summary_string += print_colors[color_index](
                 f'{date.ljust(15)}{category.ljust(20)}'
                 f'{str(price).ljust(10)}{items.ljust(25) if len(items) < 25 else (items[:21] + "...").ljust(25)}'
                 f'{description.ljust(25)}\n'
             )
         return f'{header}{summary_string}'
+
 
 if __name__ == '__main__':
     e = Expense()

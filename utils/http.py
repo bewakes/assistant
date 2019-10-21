@@ -7,3 +7,8 @@ def get(url, params, headers):
     encoded_url = f'{url}?{query}'
 
     return requests.get(encoded_url, headers=headers)
+
+
+def post(url, data, headers):
+    headers['Referer'] = 'https://expenses.bewakes.com'
+    return requests.post(url, data, headers=headers)
