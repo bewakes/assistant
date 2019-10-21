@@ -1,5 +1,12 @@
 import subprocess
 import re
+from datetime import datetime
+from dateutil import tz
+
+from .terminal_formatter import Style
+
+
+ISO_DATE_FORMAT = '%Y-%m-%d'
 
 
 def get_commands(command):
@@ -88,3 +95,24 @@ def parse_integer(string):
         return int(string.strip())
     except (ValueError, TypeError):
         return None
+
+
+def return_on_exception(function):
+    def wrapped(*args, **kwargs):
+        try:
+            return function(*args, **kwargs)
+        except Exception as e:
+            return Style.red(str(e.args and e.args[0]))
+    return wrapped
+
+
+def parse_iso_date(date_str):
+    try:
+        return datetime.strptime(date_str, ISO_DATE_FORMAT)
+    except (ValueError, TypeError) as e:
+        print(e)
+        return None
+
+
+def to_local_date(date):
+    return date.astimezone(tz.gettz())
