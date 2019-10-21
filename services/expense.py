@@ -2,6 +2,7 @@ import re
 import sys
 import os
 import json
+from datetime import datetime
 from dateutil import tz
 
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
@@ -66,31 +67,21 @@ class Expense(SocketHandlerMixin):
 
     @return_on_exception
     def handle_add(self, args):
-        print(' '.join(args))
         if self.token is None:
             return Style.red('Token not set. Please set token by issuing: "expense add_token <token>"')
-        """
-        {
-            "date":"2019-10-20",
-            "description":"",
-            "category":"8",
-            "cost":45,
-            "items":"test",
-        }
-        """
+
         match = ADD_REGEX.match(' '.join(args))
         if match is None:
             return Style.yellow('Usage: expense add <category> <amount> <comma separated items> [:: <date>] [: <description>]')
-        print(match)
 
         date = self.validate_date(match.group('date'))
-        category = match.group('category')
+        category = self.validate_category(match.group('category'))
         items = match.group('items')
         description = match.group('description')
 
         data = {
             "cost": float(match.group('amount')),
-            "date": date,
+            "date": date or datetime.utcnow().strftime('%Y-%m-%d'),
             "category": category,
         }
         if items:
@@ -99,7 +90,21 @@ class Expense(SocketHandlerMixin):
             data['description'] = description
 
         print(data)
+        # TODO: post and return message
         return Style.green('So far so good')
+
+    @return_on_exception
+    def handle_show(self, args):
+        if not args:
+            raise Exception('Nothing to show. Usage: expense show categories|expenses')
+        if args[0].lower() == 'categories':
+            categories = self.get_categories()
+            cat_str = '\n'.join([Style.green(x) for x in categories.keys()])
+            return f'Categories:\n{cat_str}'
+        elif args[0].lower() == 'expenses':
+            return f'Expenses:\n{Style.green("Not implemented yet")}'
+        else:
+            raise Exception('Usage: expense show categoies|expenses')
 
     def validate_date(self, date):
         if date is None:
@@ -114,14 +119,19 @@ class Expense(SocketHandlerMixin):
         localdate = parsed_date.astimezone(tz.gettz())
         return localdate.astimezone(tz.tzutc()).strftime('%Y-%m-%d')
 
-    def validate_category(self, data):
-        print(' in validate category')
+    def validate_category(self, category):
         identity = self.identity
         if identity is None:
             return Style.red('Invalid token set.')
 
-        default_organization = identity['default_organization']
-        pass
+        categories = self.get_categories()
+
+        category_lower = category.lower()
+        if category_lower not in categories:
+            raise Exception(f'Category "{category}" not found.')
+
+        # Return id
+        return categories[category_lower]
 
     def get_token_header(self):
         return {'Authorization': f'Token {self.token}'}
@@ -137,6 +147,23 @@ class Expense(SocketHandlerMixin):
             return self._identity
         else:
             return None
+
+    def get_categories(self):
+        if hasattr(self, '_categories'):
+            return self._categories
+        default_organization = self.identity['default_organization']
+        response = http.get(
+            CATEGORY_URL,
+            {'organization': default_organization['id']},
+            self.get_token_header()
+        )
+        if response.status_code == 200:
+            self._categories = {
+                x['name'].lower(): x['id']
+                for x in response.json()
+            }
+            return self._categories
+        raise Exception('ERROR: ' + response.text[:100])
 
 
 if __name__ == '__main__':
