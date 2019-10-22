@@ -38,4 +38,7 @@ class Style:
     def blue(s):
         return BLUE + s + NORMAL
 
+    def magenta(s):
+        return MAGENTA + s + NORMAL
+
 # TODO: make dynamic

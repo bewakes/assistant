@@ -1,5 +1,12 @@
 import subprocess
 import re
+from datetime import datetime
+from dateutil import tz
+
+from .terminal_formatter import Style
+
+
+ISO_DATE_FORMAT = '%Y-%m-%d'
 
 
 def get_commands(command):
@@ -88,3 +95,49 @@ def parse_integer(string):
         return int(string.strip())
     except (ValueError, TypeError):
         return None
+
+
+def return_on_exception(function):
+    def wrapped(*args, **kwargs):
+        try:
+            return function(*args, **kwargs)
+        except Exception as e:
+            return Style.red(str(e.args and e.args[0]))
+    return wrapped
+
+
+def parse_iso_date(date_str):
+    try:
+        return datetime.strptime(date_str, ISO_DATE_FORMAT)
+    except (ValueError, TypeError) as e:
+        print(e)
+        return None
+
+
+def to_local_date(date):
+    return date.astimezone(tz.gettz())
+
+
+def parse_duration(dur):
+    """
+    Parse strings like last month, year, etc to (1, month), (2, month), etc
+    """
+    duration = None
+    n = 1
+    if 'last' in dur:
+        dur = dur.replace('last', '').strip()
+        if 'month' in dur:
+            dur = dur.replace('months', '').replace('month', '').strip()
+            duration = 'month'
+        elif 'year' in dur:
+            dur = dur.replace('years', '').replace('year', '').strip()
+            duration = 'year'
+        elif 'week' in dur:
+            dur = dur.replace('weeks', '').replace('week', '').strip()
+            duration = 'week'
+        elif 'day' in dur:
+            dur = dur.replace('days', '').replace('day', '').strip()
+            duration = 'day'
+        # Now parse any number left
+        n = parse_integer(dur) or 1
+    return duration, n
