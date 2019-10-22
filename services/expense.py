@@ -213,6 +213,8 @@ class Expense(SocketHandlerMixin):
         if args and args[0] == 'summary':
             # Show aggregated summary by categories
             expenses = self.get_expenses(data, url=SUMMARY_URL)
+            # Sort by default
+            expenses = sorted(expenses, key=lambda x: x['total'], reverse=True)
 
             dur = match and match.group('duration') or 'last week'
             title = Style.magenta(f'\nSummary for {dur}\n'.upper())
