@@ -34,8 +34,9 @@ BASE_URL = 'https://expenses.bewakes.com/'
 IDENTITY_URL = f'{BASE_URL}identity/'
 CATEGORY_URL = f'{BASE_URL}categories/'
 EXPENSES_URL = f'{BASE_URL}expense/'
+SUMMARY_URL = f'{BASE_URL}expense/summary/'
 
-SHOW_USAGE_TEXT = 'Usage: expense show [categories|(expenses [for YYYY-MM-DD])]'
+SHOW_USAGE_TEXT = 'Usage: expense show [categories|(each|summary [for YYYY-MM-DD])]'
 
 
 class Expense(SocketHandlerMixin):
@@ -118,10 +119,12 @@ class Expense(SocketHandlerMixin):
             return f'Categories:\n{cat_str}'
         elif args[0].lower() == 'expenses':
             return self.show_expenses(args)
+        elif args[0].lower() == 'each':
+            return self.show_expenses(args)
         elif args[0].lower() == 'summary':
             return self.show_expenses(args)
         else:
-            raise Exception('Usage: expense show categoies|expenses')
+            raise Exception(SHOW_USAGE_TEXT)
 
     def validate_date(self, date):
         if date is None:
@@ -182,9 +185,9 @@ class Expense(SocketHandlerMixin):
             return self._categories
         raise Exception('ERROR: ' + response.text[:100])
 
-    def get_expenses(self, data):
+    def get_expenses(self, data, url=EXPENSES_URL):
         data['organization'] = self.identity['default_organization']['id']
-        response = http.get(EXPENSES_URL, data, self.get_token_header())
+        response = http.get(url, data, self.get_token_header())
 
         if response.status_code == 200:
             return response.json()
@@ -194,27 +197,34 @@ class Expense(SocketHandlerMixin):
     def show_expenses(self, args):
         data = {}
 
-        if args and args[0] == 'summary':
-            data['individual'] = 'true'
-            match = SHOW_REGEX.match(' '.join(args[1:]))
-            duration_str = match and match.group('duration')
-            if not duration_str:
-                duration, n = 'week', 1
-            else:
-                duration, n = parse_duration(duration_str)
-            data['duration'] = duration
-            data['n'] = n
+        match = SHOW_REGEX.match(' '.join(args[1:]))
+        duration_str = match and match.group('duration')
+        if not duration_str:
+            duration, n = 'week', 1
+        else:
+            duration, n = parse_duration(duration_str)
+        data['duration'] = duration
+        data['n'] = n
 
+        if args and args[0] == 'each':
+            data['individual'] = 'true'
             expenses = self.get_expenses(data)
             return self.get_summary_string(expenses)
+        if args and args[0] == 'summary':
+            # Show aggregated summary by categories
+            expenses = self.get_expenses(data, url=SUMMARY_URL)
 
-        """
-        params = args[1:]
-        if params and params[0] == 'for':
-            if not params[1:]:
-                raise Exception(SHOW_USAGE_TEXT)
-            data['forDate'] = params[1]
-        """
+            dur = match and match.group('duration') or 'last week'
+            title = Style.magenta(f'\nSummary for {dur}\n'.upper())
+            header = Style.yellow(f"\n{'Category'.ljust(35)}Total\n")
+            header += Style.yellow('='*len(header)) + '\n'
+            summary_string = ''
+            total = 0
+            for summary in expenses:
+                total += summary['total']
+                summary_string += Style.green(f"{summary['category__name'].ljust(35)}{summary['total']}\n")
+            summary_string += Style.magenta(f"{'TOTAL'.ljust(35)}{total}\n")
+            return title + header + summary_string
 
         expenses = self.get_expenses(data)
 
