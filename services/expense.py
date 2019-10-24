@@ -88,7 +88,7 @@ class Expense(SocketHandlerMixin):
 
         data = {
             "cost": float(match.group('amount')),
-            "date": date or datetime.utcnow().strftime('%Y-%m-%d'),
+            "date": date or datetime.now().strftime('%Y-%m-%d'),
             "category": category,
         }
         if items:
@@ -96,7 +96,6 @@ class Expense(SocketHandlerMixin):
         if description:
             data['description'] = description
 
-        print('calling http post')
         response = http.post(EXPENSES_URL, data, self.get_token_header())
         if response.status_code == 201:
             return Style.green(f'Expense of Rs.{data["cost"]} added for {data["date"]}.')
@@ -137,7 +136,7 @@ class Expense(SocketHandlerMixin):
 
         # Convert date to utc, first get local date
         localdate = parsed_date.astimezone(tz.gettz())
-        return localdate.astimezone(tz.tzutc()).strftime('%Y-%m-%d')
+        return localdate.strftime('%Y-%m-%d')
 
     def validate_category(self, category):
         identity = self.identity

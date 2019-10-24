@@ -1,3 +1,5 @@
+import os
+import sys
 import subprocess
 import re
 from datetime import datetime
@@ -5,6 +7,11 @@ from dateutil import tz
 
 from .terminal_formatter import Style
 
+sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+
+from utils import log  # noqa
+
+logger = log.get_logger('Expense utils')
 
 ISO_DATE_FORMAT = '%Y-%m-%d'
 
@@ -102,6 +109,7 @@ def return_on_exception(function):
         try:
             return function(*args, **kwargs)
         except Exception as e:
+            logger.error('ERROR:', exc_info=True)
             return Style.red(str(e.args and e.args[0]))
     return wrapped
 
