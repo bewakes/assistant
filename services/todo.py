@@ -63,8 +63,8 @@ class TodoService(SocketHandlerMixin):
             return Style.red('Usage todo check <todo id>')
         id = args[0]
         todo = self.data['todos'].get(id)
-        if not id:
-            return Style.red(f'Todo item with id {id} does not exist')
+        if not todo:
+            return Style.red(f'Todo item with id "{id}" does not exist')
         if todo['status'] == STATUS_DONE:
             return Style.yellow('The todo item is already checked!!')
         elif todo['status'] == STATUS_NOT_DONE:
