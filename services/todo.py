@@ -56,7 +56,7 @@ class TodoService(SocketHandlerMixin):
         # Save to file
         self._write_data()
         return Style.green(f'\nTodo "{todo_text}" added with id "{id}"\n') + \
-            Style.yellow(f'There are now {self.data["count"]} todos.')
+            self.todo_summary
 
     def handle_check(self, args):
         if not args:
@@ -71,8 +71,7 @@ class TodoService(SocketHandlerMixin):
             self.data['count'] -= 1
             self.data['todos'][id]['status'] = STATUS_DONE
             self._write_data()
-            return Style.green(f'\nTodo "{id}" checked out!!\n') + \
-                Style.yellow(f'There are now {self.data["count"]} todos.')
+            return Style.green(f'\nTodo "{id}" checked out!!\n') + self.todo_summary
 
     def handle_uncheck(self, args):
         if not args:
@@ -85,21 +84,34 @@ class TodoService(SocketHandlerMixin):
             self.data['count'] += 1
             self.data['todos'][id]['status'] = STATUS_NOT_DONE
             self._write_data()
-            return Style.green(f'\nTodo "{id}" unchecked!!\n') + \
-                Style.yellow(f'There are now {self.data["count"]} todos.')
+            return Style.green(f'\nTodo "{id}" unchecked!!\n') + self.todo_summary
         elif todo['status'] == STATUS_NOT_DONE:
             return Style.yellow(f'Todo "{id}" is already unchecked!!')
+
+    @property
+    def todo_summary(self):
+        total = len(self.data['todos'].keys())
+        checked = len([k for k, v in self.data['todos'].items() if v['status'] == STATUS_DONE])
+        return Style.bold(
+            f'Total Todos: {total}   '
+            f'Checked Todos: {checked}   '
+            f'Unchecked Todos: {total-checked}   '
+        )
 
     def handle_list(self, args):
         result = '\n'
         if not self.data['todos']:
             return Style.yellow('Congrats!! You do not have any todos')
+        checked_count = 0
+        unchecked_count = 0
         for k, v in self.data['todos'].items():
             if v['status'] == STATUS_DONE:
+                checked_count += 1
                 result += Style.magenta(f'{k}: {v["status"]} {v["item"]}\n')
             else:
+                unchecked_count += 1
                 result += Style.yellow(f'{k}: {v["status"]} {v["item"]}\n')
-        return result
+        return result + self.todo_summary
 
     def handle_clean(self, args):
         """This removes archived todos"""
@@ -112,7 +124,8 @@ class TodoService(SocketHandlerMixin):
         new_count = len(new_todos.keys())
         self.data['todos'] = new_todos
         self._write_data()
-        return Style.green(f'Deleted {old_count - new_count} checked todos.')
+        return Style.green(f'\nDeleted {old_count - new_count} checked todos.\n') + \
+            self.todo_summary
 
 
 if __name__ == '__main__':
