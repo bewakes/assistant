@@ -16,6 +16,13 @@ STATUS_DONE = '[X]'
 STATUS_POSTPONED = '[-]'  # This might not be used
 
 
+def sort_status_key(k_item):
+    k, item = k_item
+    if item['status'] == STATUS_NOT_DONE:
+        return -1
+    return 0
+
+
 class TodoService(SocketHandlerMixin):
     """
     Service to store todos
@@ -104,7 +111,8 @@ class TodoService(SocketHandlerMixin):
             return Style.yellow('Congrats!! You do not have any todos')
         checked_count = 0
         unchecked_count = 0
-        for k, v in self.data['todos'].items():
+        sorted_by_status = sorted(self.data['todos'].items(), key=sort_status_key, reverse=True)
+        for k, v in sorted_by_status:
             if v['status'] == STATUS_DONE:
                 checked_count += 1
                 result += Style.magenta(f'{k}: {v["status"]} {v["item"]}\n')
