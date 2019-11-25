@@ -3,6 +3,8 @@ import sys
 import json
 import hashlib
 
+from datetime import datetime
+
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from utils.socket_mixin import SocketHandlerMixin  # noqa
@@ -59,10 +61,24 @@ class TodoService(SocketHandlerMixin):
         self.data['todos'][id] = {
             'item': todo_text,
             'status': STATUS_NOT_DONE,
+            'created_date': datetime.now().strftime('%Y %B %d'),
+            'checked_date': None,
         }
         # Save to file
         self._write_data()
         return Style.green(f'\nTodo "{todo_text}" added with id "{id}"\n') + \
+            self.todo_summary
+
+    def handle_remove(self, args):
+        if not args:
+            return Style.red('Usage todo check <todo id>')
+        id = args[0]
+        todo = self.data['todos'].pop(id, None)
+        if todo is None:
+            return Style.red(f'Todo item with id "{id}" does not exist')
+        self.data['count'] -= 1
+        self._write_data()
+        return Style.green(f'\nTodo item with id "{id}" was removed\n') + \
             self.todo_summary
 
     def handle_check(self, args):
@@ -77,6 +93,7 @@ class TodoService(SocketHandlerMixin):
         elif todo['status'] == STATUS_NOT_DONE:
             self.data['count'] -= 1
             self.data['todos'][id]['status'] = STATUS_DONE
+            self.data['todos'][id]['checked_date'] = datetime.now().strftime('%Y-%b-%d')
             self._write_data()
             return Style.green(f'\nTodo "{id}" checked out!!\n') + self.todo_summary
 
@@ -100,25 +117,27 @@ class TodoService(SocketHandlerMixin):
         total = len(self.data['todos'].keys())
         checked = len([k for k, v in self.data['todos'].items() if v['status'] == STATUS_DONE])
         return Style.bold(
-            f'Total Todos: {total}   '
-            f'Checked Todos: {checked}   '
-            f'Unchecked Todos: {total-checked}   '
+            f'Total Todos: {total}\n'
+            f'Checked Todos: {checked}\n'
+            f'Unchecked Todos: {total-checked}'
         )
+
+    def render_todo(self, todo, id):
+        if todo['status'] == STATUS_DONE:
+            renderer = Style.light_purple
+        else:
+            renderer = Style.yellow
+        checked_date = todo.get("checked_date", "")
+        completion_text = Style.light_red(f' COMPLETED ON: {checked_date}' if checked_date else '')
+        return renderer(f'{id}: {todo["status"]} {todo["item"]}') + completion_text
 
     def handle_list(self, args):
         result = '\n'
         if not self.data['todos']:
             return Style.yellow('Congrats!! You do not have any todos')
-        checked_count = 0
-        unchecked_count = 0
         sorted_by_status = sorted(self.data['todos'].items(), key=sort_status_key, reverse=True)
         for k, v in sorted_by_status:
-            if v['status'] == STATUS_DONE:
-                checked_count += 1
-                result += Style.magenta(f'{k}: {v["status"]} {v["item"]}\n')
-            else:
-                unchecked_count += 1
-                result += Style.yellow(f'{k}: {v["status"]} {v["item"]}\n')
+            result += self.render_todo(v, k) + '\n'
         return result + self.todo_summary
 
     def handle_clean(self, args):
