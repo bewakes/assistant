@@ -80,7 +80,9 @@ class SocketHandlerMixin(object):
         ###
         # command parsing and handling logic to be implemented by child
         ###
-        methodname = 'handle_{}'.format(command)
+        if not command and not hasattr(self, 'handle_'):
+            return f'Service {str(self.__class__.__name__)}: {self.__doc__ or ""}'
+        methodname = 'handle_{}'.format(command or '')
         logger.info('method name: {}'.format(methodname))
         logger.info('args: {}'.format(args))
         method = self.__getattribute__(methodname)
@@ -123,7 +125,10 @@ class SocketHandlerMixin(object):
             conn, addr = self.sock.accept()
             raw_command = conn.recv(1024)
             splitted = raw_command.split()
-            command, args = splitted[0], splitted[1:]
+            if splitted:
+                command, args = splitted[0], splitted[1:]
+            else:
+                command, args = b'', b''
             command = command.decode()
             args = [x.decode() for x in args]
 
