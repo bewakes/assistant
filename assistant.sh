@@ -231,6 +231,12 @@ execute_command() {
             echo $@ >&3
             msg=$(cat<&3)
             ;;
+        "pomodoro")
+            exec 3<>/dev/tcp/localhost/${ports["pomodoro"]}
+            shift
+            echo $@ >&3
+            msg=$(cat<&3)
+            ;;
         *)
             if [[ $context != "" ]]; then
                 execute_command $context $@
