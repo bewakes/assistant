@@ -48,10 +48,21 @@ class SocketHandlerMixin(object):
 
         return process.pid
 
+    def create_child_process(self, popen_command, **kwargs):
+        p = subprocess.Popen(popen_command, shell=False, **kwargs)
+        p.kill()
+        self._child_pids[p.pid] = p
+        return p
+
     def kill_child(self, pid):
         """
         Kill child with given pid
         """
+        # try communicate
+        try:
+            self._child_pids[pid].communicate()
+        except Exception:
+            print('Could not communicate to child')
         try:
             self.execute_command("kill -9 "+str(pid))
         except Exception as e:
@@ -59,7 +70,7 @@ class SocketHandlerMixin(object):
 
     def killall(self):
         """
-        Kill all child
+        Kill all children
         """
         try:
             # TODO: check status of _child_pids keys also

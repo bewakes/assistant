@@ -112,18 +112,17 @@ class Expense(SocketHandlerMixin):
         if not args:
             return self.show_expenses(args)
 
-        if args[0].lower() == 'categories':
+        show_item = args[0].lower()
+
+        if show_item == 'categories':
             categories = self.get_categories()
             cat_str = '\n'.join([Style.green(x) for x in categories.keys()])
             return f'Categories:\n{cat_str}'
-        elif args[0].lower() == 'expenses':
-            return self.show_expenses(args)
-        elif args[0].lower() == 'each':
-            return self.show_expenses(args)
-        elif args[0].lower() == 'summary':
-            return self.show_expenses(args)
-        else:
+
+        if show_item not in ['expenses', 'each', 'summary']:
             raise Exception(SHOW_USAGE_TEXT)
+
+        return self.show_expenses(args)
 
     def validate_date(self, date):
         if date is None:
