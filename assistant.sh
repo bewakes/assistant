@@ -1,8 +1,18 @@
 #!/bin/bash
 source "$ASSISTANT_DIR"/helpers.sh
 
-LOCK_FILE=/tmp/assistant.lock
+TMP_DIR=/tmp/assistant
+SERVICES_DIR=$TMP_DIR/services
+LOCK_FILE=$TMP_DIR/assistant.lock
 ASSISTANT_HOME=$HOME/.assistant
+
+kill_services() {
+    for s in $(ls $SERVICES_DIR); do
+        pid=$(head -n 2 $SERVICES_DIR/$s | tail -n 1)
+        echo killing $s with pid $pid;
+        kill -9 $pid
+    done
+}
 
 execute_command() {
     case $1 in
@@ -10,10 +20,20 @@ execute_command() {
             echo How may I help you?
             ;;
         "exit")
-            pid=$(head -n 2 $LOCK_FILE | tail -n 1)
-            kill -9 $pid
-            rm -rf $LOCK_FILE
+            kill_services
+            rm -rf $TMP_DIR
             echo exiting
+            ;;
+        "quiz")
+            execute_command llm $@
+            port=$(head -n 1 $SERVICES_DIR/llm)
+            exec 3<>/dev/tcp/localhost/$port
+
+            echo $@ >&3
+
+            ## read data from the socket
+            read -r tmp <&3
+            echo $tmp
             ;;
         "pause")
             execute_command vlc $@

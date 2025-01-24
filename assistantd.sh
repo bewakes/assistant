@@ -1,10 +1,13 @@
 #!/bin/bash
 source "$ASSISTANT_DIR"/helpers.sh
 
-LOCK_FILE=/tmp/assistant.lock
+TMP_DIR=/tmp/assistant
+SERVICES_DIR=$TMP_DIR/services
+LOCK_FILE=$TMP_DIR/assistant.lock
 ASSISTANT_HOME=$HOME/.assistant
 
 ## TRAP AND CLEANUP
+# TODO: This is probably not needed
 cleanup() {
     echo -n 'Cleaning up...'
     # Now kill each services, which keep track of children themselves
@@ -31,9 +34,6 @@ trap 'cleanup' SIGINT
 #  all the communication takes place with the use of sockets
 ################################################################################
 
-# hash table for commands -> services
-# declare -A service_pid_map
-
 # list of enabled services
 # looks into $ASSISTANT_HOME/enabled_services.list.
 services=$(cat $ASSISTANT_HOME/enabled_services.list)
@@ -55,12 +55,11 @@ assign_ports() {
     ## Ports are stored by 'ports' variable
     ##########################################
     # To store services and ports to file which can be used by services to communicate with each other
-    rm /tmp/services-ports 2>/dev/null || touch /tmp/services-ports
     for s in ${services[@]}
     do
         port=$((RANDOM%2048+4213)) # 4213 because vlc uses 4212. TODO: retry if already used port
         ports[$s]=$port
-        echo $s $port >> /tmp/services-ports
+        echo $port > $SERVICES_DIR/$s
     done
 }
 
@@ -71,6 +70,9 @@ initialize() {
     ## them to listen on the ports assigned. 
     ## Each pid is stored in 'pids' variable.
     ###########################################
+
+    # Make tmp services dir
+    mkdir -p $SERVICES_DIR
 
     lock_content=$(head -n 1 $LOCK_FILE 2>/dev/null || echo "")
     if [ "$lock_content" = "initializing" ]; then
@@ -101,14 +103,16 @@ initialize() {
     # run all the processes/services, and store each pid
     for s in ${services[@]}
     do
+        echo starting service $s
         # make each service run and listen to the port specified
         # NOTE: the first argument will be the assigned port number to listen
         python3 "$ASSISTANT_DIR"/services/$s.py ${ports[$s]} &
 
-        pids[$s]=$! # storing corresponding pid
+        pid=$! # storing corresponding pid
+        echo $s $pid
 
         # add to map/hashtable
-        service_pid_map[$s]=${pids[$s]}
+        echo $pid >> $SERVICES_DIR/$s
     done
 
     echo "initialized" > $LOCK_FILE
