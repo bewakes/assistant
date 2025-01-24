@@ -6,15 +6,15 @@ import traceback
 
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-from utils.socket_mixin import SocketHandlerMixin  # noqa
+from utils.base import AssistantService  # noqa
 from utils import log  # noqa
 from utils.terminal_formatter import Style  # noqa
 
 
-logger = log.get_logger('Meaning service')
+logger = log.get_logger("Meaning service")
 
 
-class Meaning(SocketHandlerMixin):
+class Meaning(AssistantService):
     """
     Find meanings of query. Uses Oxford api
     """

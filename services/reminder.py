@@ -6,7 +6,7 @@ import traceback
 
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-from utils.socket_mixin import SocketHandlerMixin  # noqa
+from utils.socket_mixin import AssistantService  # noqa
 from utils.terminal_formatter import Style  # noqa
 from utils.helpers import parse_integer  # noqa
 from utils import log  # noqa
@@ -14,7 +14,7 @@ from utils import log  # noqa
 logger = log.get_logger('Reminder')
 
 
-class ReminderService(SocketHandlerMixin):
+class ReminderService(AssistantService):
     """
     Service to get reminder and send notifications to user periodically
     sample command: reminder set every n hours|minutes|days "Do this"

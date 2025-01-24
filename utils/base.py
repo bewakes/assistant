@@ -3,14 +3,18 @@ import signal
 import socket
 import subprocess
 import traceback
+from typing import Optional
+import yaml
 
 from . import log
 from .helpers import try_encode
 
 logger = log.get_logger('MIXIN')
 
+CONFIG_PATH = "~/.assistant/config.yaml"
 
-class SocketHandlerMixin(object):
+
+class AssistantService(object):
     """
     Mixin to provide command handling interface to services
     """
@@ -154,3 +158,13 @@ class SocketHandlerMixin(object):
             out = '{}\n'.format(result)
             conn.send(try_encode(out))
             conn.close()
+
+
+def get_config(key: str) -> Optional[str]:
+    try:
+        with open(CONFIG_PATH) as f:
+            config = yaml.safe_load(f)
+    except:
+        print("Could not find config")
+        return None
+    config.get(key)

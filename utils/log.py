@@ -6,7 +6,7 @@ def get_logger(name):
     logger.setLevel(logging.INFO)
 
     # create a file handler
-    handler = logging.FileHandler('/tmp/assistant.log')
+    handler = logging.FileHandler('/tmp/assistant/assistant.log')
     handler.setLevel(logging.INFO)
 
     # create a logging format

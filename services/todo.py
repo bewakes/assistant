@@ -7,7 +7,7 @@ from datetime import datetime
 
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-from utils.socket_mixin import SocketHandlerMixin  # noqa
+from utils.socket_mixin import AssistantService  # noqa
 from utils.terminal_formatter import Style  # noqa
 from utils import log  # noqa
 
@@ -25,7 +25,7 @@ def sort_status_key(k_item):
     return 0
 
 
-class TodoService(SocketHandlerMixin):
+class TodoService(AssistantService):
     """
     Service to store todos
     """

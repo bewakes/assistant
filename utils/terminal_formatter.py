@@ -28,37 +28,48 @@ LIGHT_PURPLE = '\033[0;35m'
 
 
 class Style:
-    def bold(s):
+    @staticmethod
+    def bold(s: str):
         return "\033[1m" + s + "\033[0m"
 
-    def green(s):
+    @staticmethod
+    def green(s: str):
         return GREEN + s + NORMAL
 
-    def light_green(s):
+    @staticmethod
+    def light_green(s: str):
         return LIGHT_GREEN + s + NORMAL
 
-    def light_purple(s):
+    @staticmethod
+    def light_purple(s: str):
         return LIGHT_PURPLE + s + NORMAL
 
-    def brown(s):
+    @staticmethod
+    def brown(s: str):
         return BROWN + s + NORMAL
 
-    def red(s):
+    @staticmethod
+    def red(s: str):
         return RED + s + NORMAL
 
-    def light_red(s):
+    @staticmethod
+    def light_red(s: str):
         return LIGHT_RED + s + NORMAL
 
-    def gray(s):
+    @staticmethod
+    def gray(s: str):
         return GRAY + s + NORMAL
 
-    def yellow(s):
+    @staticmethod
+    def yellow(s: str):
         return YELLOW + s + NORMAL
 
-    def blue(s):
+    @staticmethod
+    def blue(s: str):
         return BLUE + s + NORMAL
 
-    def magenta(s):
+    @staticmethod
+    def magenta(s: str):
         return MAGENTA + s + NORMAL
 
 # TODO: make dynamic

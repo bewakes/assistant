@@ -4,7 +4,7 @@ import traceback
 
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-from utils.socket_mixin import SocketHandlerMixin  # noqa
+from utils.socket_mixin import AssistantService  # noqa
 from utils import log  # noqa
 from utils.terminal_formatter import Style
 
@@ -12,7 +12,7 @@ from utils.terminal_formatter import Style
 logger = log.get_logger('Calculator service')
 
 
-class Calculator(SocketHandlerMixin):
+class Calculator(AssistantService):
     def __init__(self):
         super().__init__()
 

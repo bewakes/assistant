@@ -8,7 +8,7 @@ import random
 
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-from utils.socket_mixin import SocketHandlerMixin  # noqa
+from utils.socket_mixin import AssistantService  # noqa
 from utils import log  # noqa
 
 logger = log.get_logger('Youtube Search')
@@ -20,7 +20,7 @@ class NoVideoFound(Exception):
     pass
 
 
-class Youtube(SocketHandlerMixin):
+class Youtube(AssistantService):
     """
     Service to query songs and get youtube urls from youtube api
     """

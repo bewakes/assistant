@@ -8,7 +8,7 @@ from dateutil import tz
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 
-from utils.socket_mixin import SocketHandlerMixin  # noqa
+from utils.socket_mixin import AssistantService  # noqa
 from utils import log  # noqa
 from utils.terminal_formatter import Style  # noqa
 from utils import http  # noqa
@@ -39,7 +39,7 @@ SUMMARY_URL = f'{BASE_URL}expense/summary/'
 SHOW_USAGE_TEXT = 'Usage: expense show [categories|(each|summary [for YYYY-MM-DD])]'
 
 
-class Expense(SocketHandlerMixin):
+class Expense(AssistantService):
     """
     Add/View expenses
     """

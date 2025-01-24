@@ -6,7 +6,7 @@ import subprocess
 
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-from utils.socket_mixin import SocketHandlerMixin  # noqa
+from utils.socket_mixin import AssistantService  # noqa
 from utils.helpers import pipe_commands, pipe_commands_bg, is_url  # noqa
 from services._song_searcher import SongSearcher  # noqa
 from utils import log  # noqa
@@ -14,7 +14,7 @@ from utils import log  # noqa
 logger = log.get_logger('Song DL service')
 
 
-class SongDownloader(SocketHandlerMixin):
+class SongDownloader(AssistantService):
     """
     Service to download songs
     """

@@ -5,7 +5,7 @@ import traceback
 
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-from utils.socket_mixin import SocketHandlerMixin  # noqa
+from utils.socket_mixin import AssistantService  # noqa
 from utils.terminal_formatter import Style  # noqa
 from utils.helpers import parse_integer  # noqa
 from utils import log # noqa
@@ -13,7 +13,7 @@ from utils import log # noqa
 logger = log.get_logger('Pomodoro')
 
 
-class PomodoroService(SocketHandlerMixin):
+class PomodoroService(AssistantService):
     """
     Service to setup pomodoro
     """

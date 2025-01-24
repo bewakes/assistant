@@ -6,7 +6,7 @@ import traceback
 
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-from utils.socket_mixin import SocketHandlerMixin  # noqa
+from utils.socket_mixin import AssistantService  # noqa
 from utils.terminal_formatter import Style  # noqa
 from utils import log  # noqa
 
@@ -16,7 +16,7 @@ logger = log.get_logger('Notes')
 DELIMITER = '_|{}|_ ->'
 
 
-class NotesService(SocketHandlerMixin):
+class NotesService(AssistantService):
     """
     Service to take notes
     * First notes are stored alphabetwise
